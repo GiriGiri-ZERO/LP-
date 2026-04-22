@@ -3,12 +3,7 @@ import { db } from "@/lib/db";
 import { documents, blocks as blocksTable } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import dynamic from "next/dynamic";
-
-const EditorLayout = dynamic(
-  () => import("@/components/editor/EditorLayout").then((m) => m.EditorLayout),
-  { ssr: false }
-);
+import { EditorClient } from "@/components/editor/EditorClient";
 import type { Block, Document, Theme, ProductContext } from "@/types";
 
 interface Props {
@@ -51,5 +46,5 @@ export default async function EditorPage({ params }: Props) {
     updated_at: doc.updated_at.toISOString(),
   };
 
-  return <EditorLayout document={document} projectId={doc.project_id} />;
+  return <EditorClient document={document} projectId={doc.project_id} />;
 }
