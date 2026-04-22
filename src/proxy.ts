@@ -1,4 +1,7 @@
-import { auth } from "@/lib/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
+
+const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const { nextUrl } = req;
@@ -6,7 +9,8 @@ export default auth((req) => {
 
   const isAuthPage = nextUrl.pathname.startsWith("/login");
   const isApiAuth = nextUrl.pathname.startsWith("/api/auth");
-  const isPublic = isAuthPage || isApiAuth;
+  const isDemo = nextUrl.pathname.startsWith("/demo");
+  const isPublic = isAuthPage || isApiAuth || isDemo;
 
   if (!isLoggedIn && !isPublic) {
     return Response.redirect(new URL("/login", req.url));
@@ -18,5 +22,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.png$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$).*)"],
 };
