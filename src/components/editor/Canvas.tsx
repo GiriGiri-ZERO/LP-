@@ -80,16 +80,13 @@ function SortableBlock({
 }
 
 export function Canvas() {
-  const { blocks, selectedBlockId, selectBlock, removeBlock, addBlock, reorderBlocks, viewport } =
-    useEditorStore((s) => ({
-      blocks: s.blocks,
-      selectedBlockId: s.selectedBlockId,
-      selectBlock: s.selectBlock,
-      removeBlock: s.removeBlock,
-      addBlock: s.addBlock,
-      reorderBlocks: s.reorderBlocks,
-      viewport: s.viewport,
-    }));
+  const blocks = useEditorStore((s) => s.blocks);
+  const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
+  const selectBlock = useEditorStore((s) => s.selectBlock);
+  const removeBlock = useEditorStore((s) => s.removeBlock);
+  const addBlock = useEditorStore((s) => s.addBlock);
+  const reorderBlocks = useEditorStore((s) => s.reorderBlocks);
+  const viewport = useEditorStore((s) => s.viewport);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),

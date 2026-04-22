@@ -12,10 +12,8 @@ interface Props {
 }
 
 export function CodeView({ tab }: Props) {
-  const { blocks, document: doc } = useEditorStore((s) => ({
-    blocks: s.blocks,
-    document: s.document,
-  }));
+  const blocks = useEditorStore((s) => s.blocks);
+  const doc = useEditorStore((s) => s.document);
 
   const theme = doc?.theme ?? {};
   const [code, setCode] = useState("");

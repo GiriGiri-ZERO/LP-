@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useEditorStore } from "@/store/editor";
 import { IconBar, type IconBarCategory } from "./IconBar";
 import { SubPanel } from "./SubPanel";
@@ -17,37 +17,35 @@ interface Props {
 
 export function EditorLayout({ document, projectId }: Props) {
   const [iconCategory, setIconCategory] = useState<IconBarCategory | null>("blocks");
-  const { setDocument, activeTab, blocks, isDirty, setIsSaving } = useEditorStore(
-    (s) => ({
-      setDocument: s.setDocument,
-      activeTab: s.activeTab,
-      blocks: s.blocks,
-      isDirty: s.isDirty,
-      setIsSaving: s.setIsSaving,
-    })
-  );
+
+  const setDocument = useEditorStore((s) => s.setDocument);
+  const activeTab = useEditorStore((s) => s.activeTab);
+  const blocks = useEditorStore((s) => s.blocks);
+  const isDirty = useEditorStore((s) => s.isDirty);
+  const setIsSaving = useEditorStore((s) => s.setIsSaving);
 
   useEffect(() => {
     setDocument(document);
   }, [document, setDocument]);
 
-  const autoSave = debounce(async () => {
-    if (!isDirty) return;
-    setIsSaving(true);
-    try {
-      await fetch(`/api/documents/${document.id}/blocks`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ blocks }),
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  }, 2000);
+  const autoSaveRef = useRef(
+    debounce(async (docId: string, currentBlocks: typeof blocks) => {
+      setIsSaving(true);
+      try {
+        await fetch(`/api/documents/${docId}/blocks`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ blocks: currentBlocks }),
+        });
+      } finally {
+        setIsSaving(false);
+      }
+    }, 2000)
+  );
 
   useEffect(() => {
-    if (isDirty) autoSave();
-  }, [blocks, isDirty]);
+    if (isDirty) autoSaveRef.current(document.id, blocks);
+  }, [blocks, isDirty, document.id]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white overflow-hidden">

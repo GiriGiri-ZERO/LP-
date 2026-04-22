@@ -25,11 +25,9 @@ const BLOCK_TYPES: { type: BlockType; label: string; emoji: string }[] = [
 ];
 
 export function SubPanel({ category }: Props) {
-  const { addBlock, updateTheme, document: doc } = useEditorStore((s) => ({
-    addBlock: s.addBlock,
-    updateTheme: s.updateTheme,
-    document: s.document,
-  }));
+  const addBlock = useEditorStore((s) => s.addBlock);
+  const updateTheme = useEditorStore((s) => s.updateTheme);
+  const doc = useEditorStore((s) => s.document);
 
   if (!category) return null;
 

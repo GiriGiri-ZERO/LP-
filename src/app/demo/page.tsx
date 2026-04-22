@@ -1,7 +1,12 @@
 "use client";
 
-import { EditorLayout } from "@/components/editor/EditorLayout";
+import dynamic from "next/dynamic";
 import type { Document } from "@/types";
+
+const EditorLayout = dynamic(
+  () => import("@/components/editor/EditorLayout").then((m) => m.EditorLayout),
+  { ssr: false }
+);
 
 const DEMO_DOCUMENT: Document = {
   id: "demo-doc-1",

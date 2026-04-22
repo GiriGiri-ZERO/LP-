@@ -3,7 +3,12 @@ import { db } from "@/lib/db";
 import { documents, blocks as blocksTable } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import { EditorLayout } from "@/components/editor/EditorLayout";
+import dynamic from "next/dynamic";
+
+const EditorLayout = dynamic(
+  () => import("@/components/editor/EditorLayout").then((m) => m.EditorLayout),
+  { ssr: false }
+);
 import type { Block, Document, Theme, ProductContext } from "@/types";
 
 interface Props {
