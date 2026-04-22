@@ -1,25 +1,25 @@
-import NextAuth from "next-auth";
-import { authConfig } from "@/lib/auth.config";
+import { NextRequest, NextResponse } from "next/server";
 
-const { auth } = NextAuth(authConfig);
+export function proxy(req: NextRequest) {
+  const { pathname } = req.nextUrl;
 
-export default auth((req) => {
-  const { nextUrl } = req;
-  const isLoggedIn = !!req.auth;
+  const isPublic =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/demo");
 
-  const isAuthPage = nextUrl.pathname.startsWith("/login");
-  const isApiAuth = nextUrl.pathname.startsWith("/api/auth");
-  const isDemo = nextUrl.pathname.startsWith("/demo");
-  const isPublic = isAuthPage || isApiAuth || isDemo;
+  if (isPublic) return NextResponse.next();
 
-  if (!isLoggedIn && !isPublic) {
-    return Response.redirect(new URL("/login", req.url));
+  const sessionToken =
+    req.cookies.get("next-auth.session-token") ??
+    req.cookies.get("__Secure-next-auth.session-token");
+
+  if (!sessionToken) {
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  if (isLoggedIn && isAuthPage) {
-    return Response.redirect(new URL("/dashboard", req.url));
-  }
-});
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$).*)"],
