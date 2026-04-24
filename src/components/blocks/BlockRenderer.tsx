@@ -25,24 +25,38 @@ import type {
 interface Props {
   block: Block;
   selected: boolean;
+  isEditing: boolean;
   onClick: () => void;
+  onDoubleClick: () => void;
 }
 
-export function BlockRenderer({ block, selected, onClick }: Props) {
+export function BlockRenderer({ block, selected, isEditing, onClick, onDoubleClick }: Props) {
   return (
-    <div className="relative group cursor-pointer" onClick={onClick}>
-      {renderBlock(block, selected)}
-      <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+    <div
+      className="relative group cursor-pointer"
+      onClick={onClick}
+      onDoubleClick={onDoubleClick}
+    >
+      {renderBlock(block, selected, isEditing)}
+      <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
         <span className="bg-black/60 text-white text-xs px-2 py-0.5 rounded">
           {block.block_type}
         </span>
       </div>
+      {/* Hint shown when selected but not editing */}
+      {selected && !isEditing && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 pointer-events-none">
+          <span className="bg-black/60 text-white text-xs px-2 py-0.5 rounded whitespace-nowrap">
+            ダブルクリックで編集
+          </span>
+        </div>
+      )}
     </div>
   );
 }
 
-function renderBlock(block: Block, selected: boolean) {
-  const props = { blockId: block.id, selected };
+function renderBlock(block: Block, selected: boolean, isEditing: boolean) {
+  const props = { blockId: block.id, selected, isEditing };
   switch (block.block_type) {
     case "hero":
       return <HeroBlock {...props} content={block.content as HeroContent} />;

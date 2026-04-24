@@ -17,6 +17,7 @@ interface EditorState {
   document: Document | null;
   blocks: Block[];
   selectedBlockId: string | null;
+  editingBlockId: string | null;
   activeTab: EditorTab;
   viewport: Viewport;
   isDirty: boolean;
@@ -27,6 +28,7 @@ interface EditorState {
   setDocument: (doc: Document) => void;
   setBlocks: (blocks: Block[]) => void;
   selectBlock: (id: string | null) => void;
+  setEditingBlock: (id: string | null) => void;
   setActiveTab: (tab: EditorTab) => void;
   setViewport: (v: Viewport) => void;
 
@@ -34,6 +36,9 @@ interface EditorState {
   addBlock: (block_type: BlockType, after_index?: number) => void;
   removeBlock: (id: string) => void;
   reorderBlocks: (ids: string[]) => void;
+  duplicateBlock: (id: string) => void;
+  moveBlockUp: (id: string) => void;
+  moveBlockDown: (id: string) => void;
 
   updateTheme: (theme: Partial<Theme>) => void;
   setIsSaving: (v: boolean) => void;
@@ -47,6 +52,7 @@ export const useEditorStore = create<EditorState>()(
     document: null,
     blocks: [],
     selectedBlockId: null,
+    editingBlockId: null,
     activeTab: "preview",
     viewport: "pc",
     isDirty: false,
@@ -68,6 +74,11 @@ export const useEditorStore = create<EditorState>()(
     selectBlock: (id) =>
       set((state) => {
         state.selectedBlockId = id;
+      }),
+
+    setEditingBlock: (id) =>
+      set((state) => {
+        state.editingBlockId = id;
       }),
 
     setActiveTab: (tab) =>
@@ -127,6 +138,55 @@ export const useEditorStore = create<EditorState>()(
         state.blocks = ids
           .map((id) => blockMap.get(id))
           .filter(Boolean) as Block[];
+        state.blocks.forEach((b, i) => {
+          b.order_index = i;
+        });
+        state.isDirty = true;
+      }),
+
+    duplicateBlock: (id) =>
+      set((state) => {
+        const idx = state.blocks.findIndex((b) => b.id === id);
+        if (idx === -1) return;
+        const original = state.blocks[idx];
+        const copy: Block = {
+          ...original,
+          id: generateId(),
+          order_index: idx + 1,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          // Deep-copy content to avoid shared references
+          content: JSON.parse(JSON.stringify(original.content)),
+        };
+        state.blocks.splice(idx + 1, 0, copy);
+        state.blocks.forEach((b, i) => {
+          b.order_index = i;
+        });
+        state.isDirty = true;
+      }),
+
+    moveBlockUp: (id) =>
+      set((state) => {
+        const idx = state.blocks.findIndex((b) => b.id === id);
+        if (idx <= 0) return;
+        [state.blocks[idx - 1], state.blocks[idx]] = [
+          state.blocks[idx],
+          state.blocks[idx - 1],
+        ];
+        state.blocks.forEach((b, i) => {
+          b.order_index = i;
+        });
+        state.isDirty = true;
+      }),
+
+    moveBlockDown: (id) =>
+      set((state) => {
+        const idx = state.blocks.findIndex((b) => b.id === id);
+        if (idx === -1 || idx >= state.blocks.length - 1) return;
+        [state.blocks[idx], state.blocks[idx + 1]] = [
+          state.blocks[idx + 1],
+          state.blocks[idx],
+        ];
         state.blocks.forEach((b, i) => {
           b.order_index = i;
         });
