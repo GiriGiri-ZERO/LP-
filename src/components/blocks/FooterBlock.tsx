@@ -6,6 +6,7 @@ interface Props {
   blockId: string;
   content: FooterContent;
   selected: boolean;
+  isEditing: boolean;
 }
 
 export function FooterBlock({ content, selected }: Props) {

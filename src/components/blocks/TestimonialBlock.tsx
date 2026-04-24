@@ -7,10 +7,24 @@ interface Props {
   blockId: string;
   content: TestimonialContent;
   selected: boolean;
+  isEditing: boolean;
 }
 
-export function TestimonialBlock({ blockId, content, selected }: Props) {
+export function TestimonialBlock({ blockId, content, selected, isEditing }: Props) {
   const updateBlock = useEditorStore((s) => s.updateBlock);
+  const setEditingBlock = useEditorStore((s) => s.setEditingBlock);
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Escape") setEditingBlock(null);
+  }
+
+  const editableProps = isEditing
+    ? {
+        contentEditable: true as const,
+        suppressContentEditableWarning: true,
+        onKeyDown: handleKeyDown,
+      }
+    : { contentEditable: false as const };
 
   return (
     <section className="relative px-8 py-16 bg-gray-50">
@@ -27,16 +41,15 @@ export function TestimonialBlock({ blockId, content, selected }: Props) {
                 ))}
               </div>
               <blockquote
-                className="text-gray-700 leading-relaxed mb-4 outline-none"
-                contentEditable
-                suppressContentEditableWarning
-                onBlur={(e) => {
+                {...editableProps}
+                className={`text-gray-700 leading-relaxed mb-4 outline-none ${isEditing ? "ring-2 ring-blue-400 rounded" : ""}`}
+                onBlur={isEditing ? (e) => {
                   const newItems = [...content.items];
                   newItems[i] = { ...item, quote: e.currentTarget.textContent ?? "" };
                   updateBlock(blockId, { items: newItems });
-                }}
+                } : undefined}
               >
-                "{item.quote}"
+                &ldquo;{item.quote}&rdquo;
               </blockquote>
               <div className="flex items-center gap-3">
                 {item.avatar_url && (
@@ -48,17 +61,13 @@ export function TestimonialBlock({ blockId, content, selected }: Props) {
                 )}
                 <div>
                   <p
-                    className="font-bold outline-none"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => {
+                    {...editableProps}
+                    className={`font-bold outline-none ${isEditing ? "ring-2 ring-blue-400 rounded" : ""}`}
+                    onBlur={isEditing ? (e) => {
                       const newItems = [...content.items];
-                      newItems[i] = {
-                        ...item,
-                        author: e.currentTarget.textContent ?? "",
-                      };
+                      newItems[i] = { ...item, author: e.currentTarget.textContent ?? "" };
                       updateBlock(blockId, { items: newItems });
-                    }}
+                    } : undefined}
                   >
                     {item.author}
                   </p>
