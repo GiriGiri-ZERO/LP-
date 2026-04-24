@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useEditorStore } from "@/store/editor";
+import { useShallow } from "zustand/react/shallow";
 import { IconBar, type IconBarCategory } from "./IconBar";
 import { SubPanel } from "./SubPanel";
 import { Canvas } from "./Canvas";
@@ -18,36 +19,37 @@ interface Props {
 export function EditorLayout({ document, projectId }: Props) {
   const [iconCategory, setIconCategory] = useState<IconBarCategory | null>("blocks");
   const { setDocument, activeTab, blocks, isDirty, setIsSaving } = useEditorStore(
-    (s) => ({
+    useShallow((s) => ({
       setDocument: s.setDocument,
       activeTab: s.activeTab,
       blocks: s.blocks,
       isDirty: s.isDirty,
       setIsSaving: s.setIsSaving,
-    })
+    }))
   );
 
   useEffect(() => {
     setDocument(document);
   }, [document, setDocument]);
 
-  const autoSave = debounce(async () => {
-    if (!isDirty) return;
-    setIsSaving(true);
-    try {
-      await fetch(`/api/documents/${document.id}/blocks`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ blocks }),
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  }, 2000);
+  const autoSaveRef = useRef(
+    debounce(async (docId: string, currentBlocks: typeof blocks) => {
+      setIsSaving(true);
+      try {
+        await fetch(`/api/documents/${docId}/blocks`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ blocks: currentBlocks }),
+        });
+      } finally {
+        setIsSaving(false);
+      }
+    }, 2000)
+  );
 
   useEffect(() => {
-    if (isDirty) autoSave();
-  }, [blocks, isDirty]);
+    if (isDirty) autoSaveRef.current(document.id, blocks);
+  }, [blocks, isDirty, document.id]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white overflow-hidden">
