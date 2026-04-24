@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 export default function DemoPage() {
   return (
     <div style={{ padding: 40, fontFamily: "sans-serif" }}>
