@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useEditorStore } from "@/store/editor";
+import { useShallow } from "zustand/react/shallow";
 import { IconBar, type IconBarCategory } from "./IconBar";
 import { SubPanel } from "./SubPanel";
 import { Canvas } from "./Canvas";
@@ -17,12 +18,15 @@ interface Props {
 
 export function EditorLayout({ document, projectId }: Props) {
   const [iconCategory, setIconCategory] = useState<IconBarCategory | null>("blocks");
-
-  const setDocument = useEditorStore((s) => s.setDocument);
-  const activeTab = useEditorStore((s) => s.activeTab);
-  const blocks = useEditorStore((s) => s.blocks);
-  const isDirty = useEditorStore((s) => s.isDirty);
-  const setIsSaving = useEditorStore((s) => s.setIsSaving);
+  const { setDocument, activeTab, blocks, isDirty, setIsSaving } = useEditorStore(
+    useShallow((s) => ({
+      setDocument: s.setDocument,
+      activeTab: s.activeTab,
+      blocks: s.blocks,
+      isDirty: s.isDirty,
+      setIsSaving: s.setIsSaving,
+    }))
+  );
 
   useEffect(() => {
     setDocument(document);

@@ -7,10 +7,24 @@ interface Props {
   blockId: string;
   content: PriceContent;
   selected: boolean;
+  isEditing: boolean;
 }
 
-export function PriceBlock({ blockId, content, selected }: Props) {
+export function PriceBlock({ blockId, content, selected, isEditing }: Props) {
   const updateBlock = useEditorStore((s) => s.updateBlock);
+  const setEditingBlock = useEditorStore((s) => s.setEditingBlock);
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Escape") setEditingBlock(null);
+  }
+
+  const editableProps = isEditing
+    ? {
+        contentEditable: true as const,
+        suppressContentEditableWarning: true,
+        onKeyDown: handleKeyDown,
+      }
+    : { contentEditable: false as const };
 
   return (
     <section className="relative px-8 py-16 bg-gray-50">
@@ -20,12 +34,9 @@ export function PriceBlock({ blockId, content, selected }: Props) {
       <div className="max-w-5xl mx-auto">
         {content.headline && (
           <h2
-            className="text-3xl font-bold text-center mb-12 outline-none"
-            contentEditable
-            suppressContentEditableWarning
-            onBlur={(e) =>
-              updateBlock(blockId, { headline: e.currentTarget.textContent ?? "" })
-            }
+            {...editableProps}
+            className={`text-3xl font-bold text-center mb-12 outline-none ${isEditing ? "ring-2 ring-blue-400 rounded" : ""}`}
+            onBlur={isEditing ? (e) => updateBlock(blockId, { headline: e.currentTarget.textContent ?? "" }) : undefined}
           >
             {content.headline}
           </h2>
@@ -46,30 +57,25 @@ export function PriceBlock({ blockId, content, selected }: Props) {
                 </span>
               )}
               <h3
-                className="text-xl font-bold mb-4 outline-none"
-                contentEditable
-                suppressContentEditableWarning
-                onBlur={(e) => {
+                {...editableProps}
+                className={`text-xl font-bold mb-4 outline-none ${isEditing ? "ring-2 ring-blue-400 rounded" : ""}`}
+                onBlur={isEditing ? (e) => {
                   const newItems = [...content.items];
                   newItems[i] = { ...plan, name: e.currentTarget.textContent ?? "" };
                   updateBlock(blockId, { items: newItems });
-                }}
+                } : undefined}
               >
                 {plan.name}
               </h3>
               <div className="mb-6">
                 <span
-                  className="text-4xl font-bold text-red-500 outline-none"
-                  contentEditable
-                  suppressContentEditableWarning
-                  onBlur={(e) => {
+                  {...editableProps}
+                  className={`text-4xl font-bold text-red-500 outline-none ${isEditing ? "ring-2 ring-blue-400 rounded" : ""}`}
+                  onBlur={isEditing ? (e) => {
                     const newItems = [...content.items];
-                    newItems[i] = {
-                      ...plan,
-                      price: e.currentTarget.textContent ?? "",
-                    };
+                    newItems[i] = { ...plan, price: e.currentTarget.textContent ?? "" };
                     updateBlock(blockId, { items: newItems });
-                  }}
+                  } : undefined}
                 >
                   {plan.price}
                 </span>
@@ -82,16 +88,15 @@ export function PriceBlock({ blockId, content, selected }: Props) {
                   <li key={j} className="flex items-start gap-2">
                     <span className="text-green-500 font-bold mt-0.5">✓</span>
                     <span
-                      className="outline-none"
-                      contentEditable
-                      suppressContentEditableWarning
-                      onBlur={(e) => {
+                      {...editableProps}
+                      className={`outline-none ${isEditing ? "ring-2 ring-blue-400 rounded" : ""}`}
+                      onBlur={isEditing ? (e) => {
                         const newFeatures = [...plan.features];
                         newFeatures[j] = e.currentTarget.textContent ?? "";
                         const newItems = [...content.items];
                         newItems[i] = { ...plan, features: newFeatures };
                         updateBlock(blockId, { items: newItems });
-                      }}
+                      } : undefined}
                     >
                       {f}
                     </span>
@@ -99,18 +104,14 @@ export function PriceBlock({ blockId, content, selected }: Props) {
                 ))}
               </ul>
               <button
-                className="w-full py-3 rounded font-bold text-white outline-none"
+                {...editableProps}
+                className={`w-full py-3 rounded font-bold text-white outline-none ${isEditing ? "ring-2 ring-blue-400 rounded" : ""}`}
                 style={{ backgroundColor: "#e94560" }}
-                contentEditable
-                suppressContentEditableWarning
-                onBlur={(e) => {
+                onBlur={isEditing ? (e) => {
                   const newItems = [...content.items];
-                  newItems[i] = {
-                    ...plan,
-                    cta_text: e.currentTarget.textContent ?? "",
-                  };
+                  newItems[i] = { ...plan, cta_text: e.currentTarget.textContent ?? "" };
                   updateBlock(blockId, { items: newItems });
-                }}
+                } : undefined}
               >
                 {plan.cta_text}
               </button>

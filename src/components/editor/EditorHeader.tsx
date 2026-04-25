@@ -1,6 +1,7 @@
 "use client";
 
 import { useEditorStore } from "@/store/editor";
+import { useShallow } from "zustand/react/shallow";
 import type { EditorTab, Viewport } from "@/types";
 import {
   Monitor,
@@ -35,13 +36,18 @@ interface Props {
 }
 
 export function EditorHeader({ documentId, projectId }: Props) {
-  const activeTab = useEditorStore((s) => s.activeTab);
-  const setActiveTab = useEditorStore((s) => s.setActiveTab);
-  const viewport = useEditorStore((s) => s.viewport);
-  const setViewport = useEditorStore((s) => s.setViewport);
-  const isSaving = useEditorStore((s) => s.isSaving);
-  const isDirty = useEditorStore((s) => s.isDirty);
-  const doc = useEditorStore((s) => s.document);
+  const { activeTab, setActiveTab, viewport, setViewport, isSaving, isDirty, document: doc } =
+    useEditorStore(
+      useShallow((s) => ({
+        activeTab: s.activeTab,
+        setActiveTab: s.setActiveTab,
+        viewport: s.viewport,
+        setViewport: s.setViewport,
+        isSaving: s.isSaving,
+        isDirty: s.isDirty,
+        document: s.document,
+      }))
+    );
 
   async function handleExportHTML() {
     const res = await fetch(`/api/documents/${documentId}/export/html`, {

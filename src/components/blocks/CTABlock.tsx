@@ -7,10 +7,25 @@ interface Props {
   blockId: string;
   content: CTAContent;
   selected: boolean;
+  isEditing: boolean;
 }
 
-export function CTABlock({ blockId, content, selected }: Props) {
+export function CTABlock({ blockId, content, selected, isEditing }: Props) {
   const updateBlock = useEditorStore((s) => s.updateBlock);
+  const setEditingBlock = useEditorStore((s) => s.setEditingBlock);
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Escape") setEditingBlock(null);
+  }
+
+  const editableProps = isEditing
+    ? {
+        contentEditable: true as const,
+        suppressContentEditableWarning: true,
+        onKeyDown: handleKeyDown,
+        className: "outline-none ring-2 ring-blue-400 rounded",
+      }
+    : { contentEditable: false as const, className: "outline-none" };
 
   return (
     <section
@@ -23,36 +38,27 @@ export function CTABlock({ blockId, content, selected }: Props) {
       <div className="max-w-2xl mx-auto">
         {content.headline && (
           <h2
-            className="text-3xl font-bold mb-4 outline-none"
-            contentEditable
-            suppressContentEditableWarning
-            onBlur={(e) =>
-              updateBlock(blockId, { headline: e.currentTarget.textContent ?? "" })
-            }
+            {...editableProps}
+            className={`text-3xl font-bold mb-4 ${editableProps.className}`}
+            onBlur={isEditing ? (e) => updateBlock(blockId, { headline: e.currentTarget.textContent ?? "" }) : undefined}
           >
             {content.headline}
           </h2>
         )}
         {content.body && (
           <p
-            className="text-lg mb-8 text-gray-600 outline-none"
-            contentEditable
-            suppressContentEditableWarning
-            onBlur={(e) =>
-              updateBlock(blockId, { body: e.currentTarget.textContent ?? "" })
-            }
+            {...editableProps}
+            className={`text-lg mb-8 text-gray-600 ${editableProps.className}`}
+            onBlur={isEditing ? (e) => updateBlock(blockId, { body: e.currentTarget.textContent ?? "" }) : undefined}
           >
             {content.body}
           </p>
         )}
         <button
-          className="inline-block px-10 py-4 rounded font-bold text-lg text-white outline-none"
+          {...editableProps}
+          className={`inline-block px-10 py-4 rounded font-bold text-lg text-white ${editableProps.className}`}
           style={{ backgroundColor: content.button_color ?? "#e94560" }}
-          contentEditable
-          suppressContentEditableWarning
-          onBlur={(e) =>
-            updateBlock(blockId, { button_text: e.currentTarget.textContent ?? "" })
-          }
+          onBlur={isEditing ? (e) => updateBlock(blockId, { button_text: e.currentTarget.textContent ?? "" }) : undefined}
         >
           {content.button_text}
         </button>

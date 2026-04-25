@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useEditorStore } from "@/store/editor";
+import { useShallow } from "zustand/react/shallow";
 import { generateHTML, generateCSS } from "@/lib/html/generate";
 import { debounce } from "@/lib/utils";
 
@@ -12,8 +13,12 @@ interface Props {
 }
 
 export function CodeView({ tab }: Props) {
-  const blocks = useEditorStore((s) => s.blocks);
-  const doc = useEditorStore((s) => s.document);
+  const { blocks, document: doc } = useEditorStore(
+    useShallow((s) => ({
+      blocks: s.blocks,
+      document: s.document,
+    }))
+  );
 
   const theme = doc?.theme ?? {};
   const [code, setCode] = useState("");

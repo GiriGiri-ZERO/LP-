@@ -1,6 +1,7 @@
 "use client";
 
 import { useEditorStore } from "@/store/editor";
+import { useShallow } from "zustand/react/shallow";
 import type { IconBarCategory } from "./IconBar";
 import type { BlockType } from "@/types";
 import { Sparkles, Type, LayoutTemplate } from "lucide-react";
@@ -25,9 +26,13 @@ const BLOCK_TYPES: { type: BlockType; label: string; emoji: string }[] = [
 ];
 
 export function SubPanel({ category }: Props) {
-  const addBlock = useEditorStore((s) => s.addBlock);
-  const updateTheme = useEditorStore((s) => s.updateTheme);
-  const doc = useEditorStore((s) => s.document);
+  const { addBlock, updateTheme, document: doc } = useEditorStore(
+    useShallow((s) => ({
+      addBlock: s.addBlock,
+      updateTheme: s.updateTheme,
+      document: s.document,
+    }))
+  );
 
   if (!category) return null;
 
