@@ -24,7 +24,7 @@ const DEFAULT_THEME: Theme = {
 
 export function generateHTML(blocks: Block[], theme: Partial<Theme> = {}): string {
   const t = { ...DEFAULT_THEME, ...theme };
-  const blocksHtml = blocks
+  const blocksHtml = [...blocks]
     .sort((a, b) => a.order_index - b.order_index)
     .map((b) => renderBlock(b, t))
     .join("\n");
