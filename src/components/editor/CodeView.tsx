@@ -25,23 +25,34 @@ export function CodeView({ tab }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (tab === "html") {
-      setCode(generateHTML(blocks, theme));
-    } else {
-      setCode(generateCSS(blocks, theme));
+    if (!doc) return;
+    try {
+      if (tab === "html") {
+        setCode(generateHTML(blocks, theme));
+      } else {
+        setCode(generateCSS(blocks, theme));
+      }
+    } catch (error) {
+      setCode("/* エラー: " + (error instanceof Error ? error.message : String(error)) + " */");
     }
-  }, [blocks, theme, tab]);
+  }, [blocks, theme, tab, doc]);
 
-  const handleChange = debounce((value: string) => {
-    setCode(value);
-    if (doc?.id) {
-      fetch(`/api/documents/${doc.id}/code`, {
+  const debouncedSave = useRef(
+    debounce((value: string, docId: string, tabType: CodeTab) => {
+      fetch(`/api/documents/${docId}/code`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: tab, content: value }),
+        body: JSON.stringify({ type: tabType, content: value }),
       }).catch(console.error);
+    }, 500)
+  );
+
+  const handleChange = (value: string) => {
+    setCode(value);
+    if (doc?.id) {
+      debouncedSave.current(value, doc.id, tab);
     }
-  }, 500);
+  };
 
   return (
     <div className="flex-1 overflow-hidden flex flex-col">

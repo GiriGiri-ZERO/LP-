@@ -335,7 +335,7 @@ export function Canvas() {
                     selectBlock(block.id);
                     setEditingBlock(block.id);
                   }}
-                  onAddAfter={(type) => addBlock(type, block.order_index)}
+                  onAddAfter={(type) => addBlock(type, blocks.findIndex((b) => b.id === block.id))}
                 />
               </div>
             ))}

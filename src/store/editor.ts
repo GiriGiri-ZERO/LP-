@@ -103,13 +103,15 @@ export const useEditorStore = create<EditorState>()(
 
     addBlock: (block_type, after_index) =>
       set((state) => {
+        if (!state.document) return;
         const insertAt =
           after_index !== undefined ? after_index + 1 : state.blocks.length;
+        const maxOrderIndex = Math.max(...state.blocks.map((b) => b.order_index), -1);
         const newBlock: Block = {
           id: generateId(),
-          document_id: state.document?.id ?? "",
+          document_id: state.document.id,
           block_type,
-          order_index: insertAt,
+          order_index: maxOrderIndex + 1,
           content: getDefaultContent(block_type),
           is_ai_generated: false,
           created_at: new Date().toISOString(),
