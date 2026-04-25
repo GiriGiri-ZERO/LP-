@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useEditorStore } from "@/store/editor";
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
+import { FloatingElementToolbar } from "@/components/editor/FloatingElementToolbar";
 import {
   DndContext,
   closestCenter,
@@ -242,6 +243,7 @@ export function Canvas() {
   const editingBlockId = useEditorStore((s) => s.editingBlockId);
   const selectBlock = useEditorStore((s) => s.selectBlock);
   const setEditingBlock = useEditorStore((s) => s.setEditingBlock);
+  const setSelectedElement = useEditorStore((s) => s.setSelectedElement);
   const addBlock = useEditorStore((s) => s.addBlock);
   const reorderBlocks = useEditorStore((s) => s.reorderBlocks);
   const viewport = useEditorStore((s) => s.viewport);
@@ -260,8 +262,8 @@ export function Canvas() {
 
   function handleDragStart(event: DragStartEvent) {
     setActiveDragId(event.active.id as string);
-    // Exit editing mode if dragging
     if (editingBlockId) setEditingBlock(null);
+    setSelectedElement(null);
   }
 
   function handleDragEnd(event: DragEndEvent) {
@@ -321,6 +323,7 @@ export function Canvas() {
   const activeBlock = activeDragId ? blocks.find((b) => b.id === activeDragId) : null;
 
   return (
+    <>
     <div
       className="flex-1 bg-gray-100 overflow-auto flex flex-col items-center py-6"
       onClick={handleCanvasClick}
@@ -336,7 +339,19 @@ export function Canvas() {
         ref={canvasContentRef}
         className={`bg-white shadow-lg transition-all duration-300 ${isPaletteDragOver ? "ring-2 ring-blue-400 ring-offset-2" : ""}`}
         style={{ width: viewportWidth, maxWidth: "100%", minHeight: "600px" }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          const elTarget = (e.target as HTMLElement).closest("[data-el-id]");
+          if (elTarget) {
+            const elementId = elTarget.getAttribute("data-el-id")!;
+            const blockId = elTarget.getAttribute("data-el-block")!;
+            const elementType = elTarget.getAttribute("data-el-type") as "text" | "shape";
+            setSelectedElement({ blockId, elementId, elementType });
+            selectBlock(blockId);
+            return;
+          }
+          setSelectedElement(null);
+        }}
       >
         <DndContext
           sensors={sensors}
@@ -420,5 +435,7 @@ export function Canvas() {
         )}
       </div>
     </div>
+    <FloatingElementToolbar />
+    </>
   );
 }

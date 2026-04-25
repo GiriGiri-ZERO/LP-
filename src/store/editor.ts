@@ -10,6 +10,8 @@ import type {
   Viewport,
   BlockType,
   BlockContent,
+  SelectedElement,
+  ElementStyle,
 } from "@/types";
 import { generateId } from "@/lib/utils";
 
@@ -40,6 +42,10 @@ interface EditorState {
   moveBlockUp: (id: string) => void;
   moveBlockDown: (id: string) => void;
 
+  selectedElement: SelectedElement | null;
+  setSelectedElement: (el: SelectedElement | null) => void;
+  updateElementStyle: (blockId: string, elementId: string, style: Partial<ElementStyle>) => void;
+
   updateTheme: (theme: Partial<Theme>) => void;
   setIsSaving: (v: boolean) => void;
   setIsDirty: (v: boolean) => void;
@@ -53,6 +59,7 @@ export const useEditorStore = create<EditorState>()(
     blocks: [],
     selectedBlockId: null,
     editingBlockId: null,
+    selectedElement: null,
     activeTab: "preview",
     viewport: "pc",
     isDirty: false,
@@ -192,6 +199,23 @@ export const useEditorStore = create<EditorState>()(
         state.blocks.forEach((b, i) => {
           b.order_index = i;
         });
+        state.isDirty = true;
+      }),
+
+    setSelectedElement: (el) =>
+      set((state) => {
+        state.selectedElement = el;
+      }),
+
+    updateElementStyle: (blockId, elementId, style) =>
+      set((state) => {
+        const block = state.blocks.find((b) => b.id === blockId);
+        if (!block) return;
+        const content = block.content as { elementStyles?: Record<string, Record<string, unknown>> };
+        if (!content.elementStyles) content.elementStyles = {};
+        if (!content.elementStyles[elementId]) content.elementStyles[elementId] = {};
+        Object.assign(content.elementStyles[elementId], style);
+        block.updated_at = new Date().toISOString();
         state.isDirty = true;
       }),
 

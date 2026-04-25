@@ -15,6 +15,23 @@ export type Tone = "professional" | "friendly" | "luxury" | "urgent";
 export type Viewport = "pc" | "sp" | "tab";
 export type EditorTab = "preview" | "html" | "css";
 
+export interface ElementStyle {
+  color?: string;
+  backgroundColor?: string;
+  borderColor?: string;
+  borderRadius?: number;
+  fontSize?: number;
+  fontWeight?: "normal" | "bold";
+  fontStyle?: "normal" | "italic";
+  textAlign?: "left" | "center" | "right";
+}
+
+export interface SelectedElement {
+  blockId: string;
+  elementId: string;
+  elementType: "text" | "shape";
+}
+
 export interface Theme {
   primaryColor: string;
   secondaryColor: string;
@@ -65,6 +82,7 @@ export interface HeroContent {
   text_color?: string;
   button_color?: string;
   image_url?: string;
+  elementStyles?: Record<string, ElementStyle>;
 }
 
 export interface HeadlineContent {
@@ -72,11 +90,13 @@ export interface HeadlineContent {
   level: 1 | 2 | 3 | 4;
   align?: "left" | "center" | "right";
   color?: string;
+  elementStyles?: Record<string, ElementStyle>;
 }
 
 export interface BodyContent {
   html: string;
   align?: "left" | "center" | "right";
+  elementStyles?: Record<string, ElementStyle>;
 }
 
 export interface CTAContent {
@@ -86,6 +106,7 @@ export interface CTAContent {
   button_url?: string;
   button_color?: string;
   background_color?: string;
+  elementStyles?: Record<string, ElementStyle>;
 }
 
 export interface TestimonialContent {
@@ -96,6 +117,7 @@ export interface TestimonialContent {
     avatar_url?: string;
     rating?: number;
   }>;
+  elementStyles?: Record<string, ElementStyle>;
 }
 
 export interface FAQContent {
@@ -103,6 +125,7 @@ export interface FAQContent {
     question: string;
     answer: string;
   }>;
+  elementStyles?: Record<string, ElementStyle>;
 }
 
 export interface FeatureContent {
@@ -112,6 +135,7 @@ export interface FeatureContent {
     description: string;
     icon?: string;
   }>;
+  elementStyles?: Record<string, ElementStyle>;
 }
 
 export interface PriceContent {
@@ -124,12 +148,14 @@ export interface PriceContent {
     cta_text: string;
     is_featured?: boolean;
   }>;
+  elementStyles?: Record<string, ElementStyle>;
 }
 
 export interface FooterContent {
   company_name?: string;
   copyright?: string;
   links?: Array<{ label: string; url: string }>;
+  elementStyles?: Record<string, ElementStyle>;
 }
 
 export interface Document {

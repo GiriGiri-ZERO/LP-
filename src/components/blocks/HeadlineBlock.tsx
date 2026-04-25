@@ -32,9 +32,15 @@ export function HeadlineBlock({ blockId, content, selected, isEditing }: Props) 
         <Tag
           className={`${sizeMap[content.level ?? 2] ?? "text-3xl"} font-bold outline-none ${isEditing ? "ring-2 ring-blue-400 rounded" : ""}`}
           style={{
-            textAlign: content.align ?? "center",
-            color: content.color ?? "inherit",
+            textAlign: content.elementStyles?.text?.textAlign ?? content.align ?? "center",
+            color: content.elementStyles?.text?.color ?? content.color ?? "inherit",
+            fontSize: content.elementStyles?.text?.fontSize ? `${content.elementStyles.text.fontSize}px` : undefined,
+            fontWeight: content.elementStyles?.text?.fontWeight ?? undefined,
+            fontStyle: content.elementStyles?.text?.fontStyle ?? undefined,
           }}
+          data-el-block={blockId}
+          data-el-id="text"
+          data-el-type="text"
           contentEditable={isEditing}
           suppressContentEditableWarning
           onKeyDown={isEditing ? handleKeyDown : undefined}
