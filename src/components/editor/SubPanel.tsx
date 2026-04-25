@@ -52,7 +52,12 @@ export function SubPanel({ category }: Props) {
                 <button
                   key={b.type}
                   onClick={() => addBlock(b.type)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-200 hover:bg-gray-700 transition-colors text-left"
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("text/block-type", b.type);
+                    e.dataTransfer.effectAllowed = "copy";
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-200 hover:bg-gray-700 transition-colors text-left cursor-grab active:cursor-grabbing"
                 >
                   <span className="text-lg">{b.emoji}</span>
                   {b.label}

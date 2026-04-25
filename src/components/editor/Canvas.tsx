@@ -248,6 +248,8 @@ export function Canvas() {
 
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [showEmptyPopup, setShowEmptyPopup] = useState(false);
+  const [isPaletteDragOver, setIsPaletteDragOver] = useState(false);
+  const canvasContentRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -274,6 +276,32 @@ export function Canvas() {
     reorderBlocks(newOrder);
   }
 
+  function getDropIndex(clientY: number): number {
+    if (!canvasContentRef.current) return sortedBlocks.length;
+    const blockEls = Array.from(canvasContentRef.current.querySelectorAll("[data-block-id]"));
+    for (let i = 0; i < blockEls.length; i++) {
+      const rect = blockEls[i].getBoundingClientRect();
+      if (clientY < rect.top + rect.height / 2) return i;
+    }
+    return blockEls.length;
+  }
+
+  function handlePaletteDragOver(e: React.DragEvent) {
+    if (!e.dataTransfer.types.includes("text/block-type")) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    setIsPaletteDragOver(true);
+  }
+
+  function handlePaletteDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setIsPaletteDragOver(false);
+    const blockType = e.dataTransfer.getData("text/block-type") as BlockType;
+    if (!blockType) return;
+    const insertIndex = getDropIndex(e.clientY);
+    addBlock(blockType, insertIndex > 0 ? insertIndex - 1 : undefined);
+  }
+
   // Click on canvas background deselects / exits editing
   const handleCanvasClick = useCallback(() => {
     if (editingBlockId) {
@@ -296,9 +324,17 @@ export function Canvas() {
     <div
       className="flex-1 bg-gray-100 overflow-auto flex flex-col items-center py-6"
       onClick={handleCanvasClick}
+      onDragOver={handlePaletteDragOver}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setIsPaletteDragOver(false);
+        }
+      }}
+      onDrop={handlePaletteDrop}
     >
       <div
-        className="bg-white shadow-lg transition-all duration-300"
+        ref={canvasContentRef}
+        className={`bg-white shadow-lg transition-all duration-300 ${isPaletteDragOver ? "ring-2 ring-blue-400 ring-offset-2" : ""}`}
         style={{ width: viewportWidth, maxWidth: "100%", minHeight: "600px" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -313,7 +349,7 @@ export function Canvas() {
             strategy={verticalListSortingStrategy}
           >
             {sortedBlocks.map((block, idx) => (
-              <div key={block.id}>
+              <div key={block.id} data-block-id={block.id}>
                 {/* Drop zone line between blocks */}
                 {activeDragId && activeDragId !== block.id && (
                   <DropZoneLine id={`drop-before-${block.id}`} />
