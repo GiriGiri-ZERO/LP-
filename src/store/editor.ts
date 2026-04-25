@@ -237,6 +237,7 @@ function getDefaultContent(type: BlockType): BlockContent {
         cta_text: "今すぐ申し込む",
         background_color: "#1a1a2e",
         text_color: "#ffffff",
+        button_color: "#e94560",
       };
     case "headline":
       return { text: "見出しテキスト", level: 2, align: "center" };

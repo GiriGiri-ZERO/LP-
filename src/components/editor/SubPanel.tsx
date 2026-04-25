@@ -98,7 +98,7 @@ export function SubPanel({ category }: Props) {
         {category === "style" && doc && (
           <div className="space-y-4">
             {/* Block-specific controls */}
-            {selectedBlock && (
+            {selectedBlock ? (
               <div key={selectedBlockId ?? "none"}>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-xs font-semibold text-blue-400 uppercase tracking-wider">
@@ -221,7 +221,7 @@ export function SubPanel({ category }: Props) {
 
                 <div className="border-t border-gray-700 mt-4 pt-1" />
               </div>
-            )}
+            ) : null}
 
             {/* Global theme colors */}
             <div>
