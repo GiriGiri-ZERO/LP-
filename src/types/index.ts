@@ -63,6 +63,7 @@ export interface HeroContent {
   cta_url?: string;
   background_color?: string;
   text_color?: string;
+  button_color?: string;
   image_url?: string;
 }
 

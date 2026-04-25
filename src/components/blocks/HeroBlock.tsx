@@ -66,7 +66,7 @@ export function HeroBlock({ blockId, content, selected, isEditing = false, onDou
         </p>
         <button
           className={`inline-block px-10 py-4 rounded font-bold text-lg text-white outline-none ${isEditing ? "ring-2 ring-blue-400" : ""}`}
-          style={{ backgroundColor: "#e94560" }}
+          style={{ backgroundColor: content.button_color ?? "#e94560" }}
           {...editableProps}
           onBlur={isEditing ? (e) => updateBlock(blockId, { cta_text: e.currentTarget.textContent ?? "" }) : undefined}
         >

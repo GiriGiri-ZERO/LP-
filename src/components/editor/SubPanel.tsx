@@ -99,7 +99,7 @@ export function SubPanel({ category }: Props) {
           <div className="space-y-4">
             {/* Block-specific controls */}
             {selectedBlock && (
-              <div>
+              <div key={selectedBlockId ?? "none"}>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-xs font-semibold text-blue-400 uppercase tracking-wider">
                     選択中のブロック
@@ -130,6 +130,17 @@ export function SubPanel({ category }: Props) {
                           <Input className="h-8 text-xs bg-gray-700 border-gray-600 text-white"
                             value={c.text_color ?? "#ffffff"}
                             onChange={(e) => updateBlock(selectedBlock.id, { text_color: e.target.value })} />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">ボタン色</Label>
+                        <div className="flex gap-2 items-center">
+                          <input type="color" value={c.button_color ?? "#e94560"}
+                            onChange={(e) => updateBlock(selectedBlock.id, { button_color: e.target.value })}
+                            className="w-8 h-8 rounded cursor-pointer border border-gray-600" />
+                          <Input className="h-8 text-xs bg-gray-700 border-gray-600 text-white"
+                            value={c.button_color ?? "#e94560"}
+                            onChange={(e) => updateBlock(selectedBlock.id, { button_color: e.target.value })} />
                         </div>
                       </div>
                     </div>
@@ -225,13 +236,13 @@ export function SubPanel({ category }: Props) {
                   <div className="flex gap-2 items-center">
                     <input
                       type="color"
-                      defaultValue={doc.theme.primaryColor ?? "#e94560"}
+                      value={doc.theme.primaryColor ?? "#e94560"}
                       onChange={(e) => updateTheme({ primaryColor: e.target.value })}
                       className="w-8 h-8 rounded cursor-pointer border border-gray-600"
                     />
                     <Input
                       className="h-8 text-xs bg-gray-700 border-gray-600 text-white"
-                      defaultValue={doc.theme.primaryColor ?? "#e94560"}
+                      value={doc.theme.primaryColor ?? "#e94560"}
                       onChange={(e) => updateTheme({ primaryColor: e.target.value })}
                     />
                   </div>
@@ -241,13 +252,13 @@ export function SubPanel({ category }: Props) {
                   <div className="flex gap-2 items-center">
                     <input
                       type="color"
-                      defaultValue={doc.theme.backgroundColor ?? "#ffffff"}
+                      value={doc.theme.backgroundColor ?? "#ffffff"}
                       onChange={(e) => updateTheme({ backgroundColor: e.target.value })}
                       className="w-8 h-8 rounded cursor-pointer border border-gray-600"
                     />
                     <Input
                       className="h-8 text-xs bg-gray-700 border-gray-600 text-white"
-                      defaultValue={doc.theme.backgroundColor ?? "#ffffff"}
+                      value={doc.theme.backgroundColor ?? "#ffffff"}
                       onChange={(e) => updateTheme({ backgroundColor: e.target.value })}
                     />
                   </div>

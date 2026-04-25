@@ -95,7 +95,7 @@ export const useEditorStore = create<EditorState>()(
       set((state) => {
         const block = state.blocks.find((b) => b.id === id);
         if (block) {
-          block.content = { ...block.content, ...content } as BlockContent;
+          Object.assign(block.content, content);
           block.updated_at = new Date().toISOString();
           state.isDirty = true;
         }
