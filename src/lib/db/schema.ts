@@ -28,6 +28,7 @@ export const blockTypeEnum = pgEnum("block_type", [
   "feature",
   "price",
   "footer",
+  "image",
 ]);
 export const memberRoleEnum = pgEnum("member_role", [
   "viewer",

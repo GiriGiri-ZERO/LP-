@@ -4,11 +4,12 @@ import { useEditorStore } from "@/store/editor";
 import { useShallow } from "zustand/react/shallow";
 import type { IconBarCategory } from "./IconBar";
 import type { BlockType, HeroContent, HeadlineContent, CTAContent } from "@/types";
-import { Sparkles, Type, LayoutTemplate, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
+import { Sparkles, Type, LayoutTemplate, AlignLeft, AlignCenter, AlignRight, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { useRef, useState, useCallback } from "react";
 
 interface Props {
   category: IconBarCategory | null;
@@ -268,6 +269,10 @@ export function SubPanel({ category }: Props) {
           </div>
         )}
 
+        {category === "image" && (
+          <ImagePanel addBlock={addBlock} />
+        )}
+
         {category === "ai" && (
           <div>
             <div className="flex items-center gap-2 mb-3">
@@ -292,5 +297,88 @@ export function SubPanel({ category }: Props) {
         )}
       </div>
     </aside>
+  );
+}
+
+const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+
+function ImagePanel({ addBlock }: { addBlock: (block_type: BlockType, after_index?: number, contentOverride?: Record<string, unknown>) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [previews, setPreviews] = useState<{ src: string; name: string }[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFiles = useCallback((files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setError(null);
+
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith("image/")) return;
+      if (file.size > MAX_SIZE) {
+        setError("10MB 以下の画像を選択してください");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const src = e.target?.result as string;
+        setPreviews((prev) => [...prev, { src, name: file.name }]);
+      };
+      reader.readAsDataURL(file);
+    });
+  }, []);
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        <ImageIcon size={14} className="text-gray-400" />
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          画像
+        </span>
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => handleFiles(e.target.files)}
+      />
+
+      <Button
+        size="sm"
+        variant="outline"
+        className="w-full text-xs border-gray-600 text-gray-200 mb-3"
+        onClick={() => inputRef.current?.click()}
+      >
+        + 画像を選択
+      </Button>
+
+      {error && <p className="text-xs text-red-400 mb-2">{error}</p>}
+
+      {previews.length > 0 && (
+        <div className="space-y-1">
+          <p className="text-xs text-gray-500 mb-1">クリックで挿入</p>
+          <div className="grid grid-cols-2 gap-1">
+            {previews.map((p, i) => (
+              <button
+                key={i}
+                onClick={() => addBlock("image", undefined, { src: p.src, alt: p.name })}
+                className="aspect-square rounded overflow-hidden border border-gray-600 hover:border-blue-400 transition-colors"
+                title={p.name}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.src} alt={p.name} className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {previews.length === 0 && (
+        <p className="text-xs text-gray-500">
+          JPG・PNG・WebP・GIF（10MB以下）
+        </p>
+      )}
+    </div>
   );
 }

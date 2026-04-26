@@ -9,7 +9,8 @@ export type BlockType =
   | "faq"
   | "feature"
   | "price"
-  | "footer";
+  | "footer"
+  | "image";
 export type MemberRole = "viewer" | "editor" | "admin";
 export type Tone = "professional" | "friendly" | "luxury" | "urgent";
 export type Viewport = "pc" | "sp" | "tab";
@@ -71,7 +72,8 @@ export type BlockContent =
   | FAQContent
   | FeatureContent
   | PriceContent
-  | FooterContent;
+  | FooterContent
+  | ImageContent;
 
 export interface HeroContent {
   headline: string;
@@ -155,6 +157,16 @@ export interface FooterContent {
   company_name?: string;
   copyright?: string;
   links?: Array<{ label: string; url: string }>;
+  elementStyles?: Record<string, ElementStyle>;
+}
+
+export interface ImageContent {
+  src: string;
+  alt: string;
+  object_fit?: "cover" | "contain" | "fill";
+  height?: number;
+  border_radius?: number;
+  opacity?: number;
   elementStyles?: Record<string, ElementStyle>;
 }
 

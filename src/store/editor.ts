@@ -35,7 +35,7 @@ interface EditorState {
   setViewport: (v: Viewport) => void;
 
   updateBlock: (id: string, content: Partial<BlockContent>) => void;
-  addBlock: (block_type: BlockType, after_index?: number) => void;
+  addBlock: (block_type: BlockType, after_index?: number, contentOverride?: Partial<BlockContent>) => void;
   removeBlock: (id: string) => void;
   reorderBlocks: (ids: string[]) => void;
   duplicateBlock: (id: string) => void;
@@ -108,7 +108,7 @@ export const useEditorStore = create<EditorState>()(
         }
       }),
 
-    addBlock: (block_type, after_index) =>
+    addBlock: (block_type, after_index, contentOverride) =>
       set((state) => {
         if (!state.document) return;
         const insertAt =
@@ -124,6 +124,7 @@ export const useEditorStore = create<EditorState>()(
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
+        if (contentOverride) Object.assign(newBlock.content, contentOverride);
         state.blocks.splice(insertAt, 0, newBlock);
         state.blocks.forEach((b, i) => {
           b.order_index = i;
@@ -321,6 +322,14 @@ function getDefaultContent(type: BlockType): BlockContent {
       return {
         company_name: "株式会社〇〇",
         copyright: `© ${new Date().getFullYear()} 株式会社〇〇. All rights reserved.`,
+      };
+    case "image":
+      return {
+        src: "",
+        alt: "画像",
+        object_fit: "cover",
+        height: 400,
+        opacity: 1,
       };
     default:
       return {};
