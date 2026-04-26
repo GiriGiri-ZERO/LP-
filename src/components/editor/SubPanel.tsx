@@ -3,7 +3,7 @@
 import { useEditorStore } from "@/store/editor";
 import { useShallow } from "zustand/react/shallow";
 import type { IconBarCategory } from "./IconBar";
-import type { BlockType, HeroContent, HeadlineContent, CTAContent } from "@/types";
+import type { BlockType, HeroContent, HeadlineContent, CTAContent, ImageContent } from "@/types";
 import { Sparkles, Type, LayoutTemplate, AlignLeft, AlignCenter, AlignRight, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -216,8 +216,63 @@ export function SubPanel({ category }: Props) {
                   );
                 })()}
 
-                {!["hero", "headline", "cta"].includes(selectedBlock.block_type) && (
-                  <p className="text-xs text-gray-500">このブロックにはカラー設定がありません</p>
+                {selectedBlock.block_type === "image" && (() => {
+                  const c = selectedBlock.content as ImageContent;
+                  return (
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">高さ (px)</Label>
+                        <Input
+                          type="number"
+                          min={100}
+                          max={1200}
+                          className="h-8 text-xs bg-gray-700 border-gray-600 text-white"
+                          value={c.height ?? 400}
+                          onChange={(e) => updateBlock(selectedBlock.id, { height: Number(e.target.value) })}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">フィット</Label>
+                        <select
+                          className="w-full h-8 text-xs bg-gray-700 border border-gray-600 text-white rounded px-2"
+                          value={c.object_fit ?? "cover"}
+                          onChange={(e) => updateBlock(selectedBlock.id, { object_fit: e.target.value as ImageContent["object_fit"] })}
+                        >
+                          <option value="cover">カバー</option>
+                          <option value="contain">収める</option>
+                          <option value="fill">引き伸ばす</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">透明度 {Math.round((c.opacity ?? 1) * 100)}%</Label>
+                        <input
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.05}
+                          className="w-full accent-blue-500"
+                          value={c.opacity ?? 1}
+                          onChange={(e) => updateBlock(selectedBlock.id, { opacity: Number(e.target.value) })}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">角丸 {c.border_radius ?? 0}px</Label>
+                        <input
+                          type="range"
+                          min={0}
+                          max={48}
+                          step={2}
+                          className="w-full accent-blue-500"
+                          value={c.border_radius ?? 0}
+                          onChange={(e) => updateBlock(selectedBlock.id, { border_radius: Number(e.target.value) })}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {!["hero", "headline", "cta", "image"].includes(selectedBlock.block_type) && (
+                  <p className="text-xs text-gray-500">このブロックにはスタイル設定がありません</p>
                 )}
 
                 <div className="border-t border-gray-700 mt-4 pt-1" />
@@ -302,7 +357,7 @@ export function SubPanel({ category }: Props) {
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
-function ImagePanel({ addBlock }: { addBlock: (block_type: BlockType, after_index?: number, contentOverride?: Record<string, unknown>) => void }) {
+function ImagePanel({ addBlock }: { addBlock: (block_type: BlockType, after_index?: number, contentOverride?: Partial<ImageContent>) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [previews, setPreviews] = useState<{ src: string; name: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
