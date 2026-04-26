@@ -12,6 +12,7 @@ import type {
   BlockContent,
   SelectedElement,
   ElementStyle,
+  EditingElement,
 } from "@/types";
 import { generateId } from "@/lib/utils";
 
@@ -46,6 +47,9 @@ interface EditorState {
   setSelectedElement: (el: SelectedElement | null) => void;
   updateElementStyle: (blockId: string, elementId: string, style: Partial<ElementStyle>) => void;
 
+  editingElement: EditingElement | null;
+  setEditingElement: (e: EditingElement | null) => void;
+
   updateTheme: (theme: Partial<Theme>) => void;
   setIsSaving: (v: boolean) => void;
   setIsDirty: (v: boolean) => void;
@@ -60,6 +64,7 @@ export const useEditorStore = create<EditorState>()(
     selectedBlockId: null,
     editingBlockId: null,
     selectedElement: null,
+    editingElement: null,
     activeTab: "preview",
     viewport: "pc",
     isDirty: false,
@@ -206,6 +211,13 @@ export const useEditorStore = create<EditorState>()(
     setSelectedElement: (el) =>
       set((state) => {
         state.selectedElement = el;
+      }),
+
+    setEditingElement: (e) =>
+      set((state) => {
+        state.editingElement = e;
+        // Keep editingBlockId in sync for backward-compat with blocks that still use isEditing prop
+        state.editingBlockId = e?.blockId ?? null;
       }),
 
     updateElementStyle: (blockId, elementId, style) =>

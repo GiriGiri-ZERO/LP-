@@ -33,6 +33,11 @@ export interface SelectedElement {
   elementType: "text" | "shape";
 }
 
+export interface EditingElement {
+  blockId: string;
+  elementId: string;
+}
+
 export interface Theme {
   primaryColor: string;
   secondaryColor: string;

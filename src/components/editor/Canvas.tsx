@@ -244,6 +244,7 @@ export function Canvas() {
   const selectBlock = useEditorStore((s) => s.selectBlock);
   const setEditingBlock = useEditorStore((s) => s.setEditingBlock);
   const setSelectedElement = useEditorStore((s) => s.setSelectedElement);
+  const setEditingElement = useEditorStore((s) => s.setEditingElement);
   const addBlock = useEditorStore((s) => s.addBlock);
   const reorderBlocks = useEditorStore((s) => s.reorderBlocks);
   const viewport = useEditorStore((s) => s.viewport);
@@ -308,10 +309,23 @@ export function Canvas() {
   const handleCanvasClick = useCallback(() => {
     if (editingBlockId) {
       setEditingBlock(null);
+      setEditingElement(null);
     } else if (selectedBlockId) {
       selectBlock(null);
     }
-  }, [editingBlockId, selectedBlockId, setEditingBlock, selectBlock]);
+  }, [editingBlockId, selectedBlockId, setEditingBlock, setEditingElement, selectBlock]);
+
+  // Double-click on an element (data-el-id) starts per-element editing
+  const handleCanvasDoubleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    const elTarget = (e.target as HTMLElement).closest("[data-el-id]");
+    if (elTarget) {
+      const elementId = elTarget.getAttribute("data-el-id")!;
+      const blockId = elTarget.getAttribute("data-el-block")!;
+      setEditingElement({ blockId, elementId });
+      selectBlock(blockId);
+    }
+  }, [setEditingElement, selectBlock]);
 
   const viewportWidth = {
     pc: "100%",
@@ -339,6 +353,7 @@ export function Canvas() {
         ref={canvasContentRef}
         className={`bg-white shadow-lg transition-all duration-300 ${isPaletteDragOver ? "ring-2 ring-blue-400 ring-offset-2" : ""}`}
         style={{ width: viewportWidth, maxWidth: "100%", minHeight: "600px" }}
+        onDoubleClick={handleCanvasDoubleClick}
         onClick={(e) => {
           e.stopPropagation();
           const elTarget = (e.target as HTMLElement).closest("[data-el-id]");
@@ -384,7 +399,6 @@ export function Canvas() {
                   }}
                   onDoubleClick={() => {
                     selectBlock(block.id);
-                    setEditingBlock(block.id);
                   }}
                   onAddAfter={(type) => addBlock(type, blocks.findIndex((b) => b.id === block.id))}
                 />
