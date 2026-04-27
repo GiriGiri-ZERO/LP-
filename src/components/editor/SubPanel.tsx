@@ -3,8 +3,8 @@
 import { useEditorStore } from "@/store/editor";
 import { useShallow } from "zustand/react/shallow";
 import type { IconBarCategory } from "./IconBar";
-import type { BlockType, HeroContent, HeadlineContent, CTAContent, ImageContent } from "@/types";
-import { Sparkles, Type, LayoutTemplate, AlignLeft, AlignCenter, AlignRight, ImageIcon } from "lucide-react";
+import type { BlockType, BlockContent, HeroContent, HeadlineContent, CTAContent, ImageContent, VideoContent } from "@/types";
+import { Sparkles, Type, LayoutTemplate, AlignLeft, AlignCenter, AlignRight, ImageIcon, Film } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,7 +87,12 @@ export function SubPanel({ category }: Props) {
                 <button
                   key={t}
                   onClick={() => addBlock(t)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-200 hover:bg-gray-700 transition-colors text-left"
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("text/block-type", t);
+                    e.dataTransfer.effectAllowed = "copy";
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-200 hover:bg-gray-700 transition-colors text-left cursor-grab active:cursor-grabbing"
                 >
                   {t === "headline" ? "📰 見出し" : "📝 本文"}
                 </button>
@@ -325,7 +330,7 @@ export function SubPanel({ category }: Props) {
         )}
 
         {category === "image" && (
-          <ImagePanel addBlock={addBlock} />
+          <MediaPanel addBlock={addBlock} />
         )}
 
         {category === "ai" && (
@@ -356,8 +361,40 @@ export function SubPanel({ category }: Props) {
 }
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
 
-function ImagePanel({ addBlock }: { addBlock: (block_type: BlockType, after_index?: number, contentOverride?: Partial<ImageContent>) => void }) {
+type AddBlockFn = (block_type: BlockType, after_index?: number, contentOverride?: Partial<BlockContent>) => void;
+
+function MediaPanel({ addBlock }: { addBlock: AddBlockFn }) {
+  const [tab, setTab] = useState<"image" | "video">("image");
+  return (
+    <div>
+      <div className="flex gap-1 mb-3">
+        <button
+          onClick={() => setTab("image")}
+          className={cn(
+            "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-xs font-medium transition-colors",
+            tab === "image" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white hover:bg-gray-700"
+          )}
+        >
+          <ImageIcon size={12} /> 画像
+        </button>
+        <button
+          onClick={() => setTab("video")}
+          className={cn(
+            "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-xs font-medium transition-colors",
+            tab === "video" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white hover:bg-gray-700"
+          )}
+        >
+          <Film size={12} /> 動画
+        </button>
+      </div>
+      {tab === "image" ? <ImagePanel addBlock={addBlock} /> : <VideoPanel addBlock={addBlock} />}
+    </div>
+  );
+}
+
+function ImagePanel({ addBlock }: { addBlock: AddBlockFn }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [previews, setPreviews] = useState<{ src: string; name: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -418,7 +455,13 @@ function ImagePanel({ addBlock }: { addBlock: (block_type: BlockType, after_inde
               <button
                 key={i}
                 onClick={() => addBlock("image", undefined, { src: p.src, alt: p.name })}
-                className="aspect-square rounded overflow-hidden border border-gray-600 hover:border-blue-400 transition-colors"
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("text/image-src", p.src);
+                  e.dataTransfer.setData("text/block-type", "image");
+                  e.dataTransfer.effectAllowed = "copy";
+                }}
+                className="aspect-square rounded overflow-hidden border border-gray-600 hover:border-blue-400 transition-colors cursor-grab active:cursor-grabbing"
                 title={p.name}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -432,6 +475,82 @@ function ImagePanel({ addBlock }: { addBlock: (block_type: BlockType, after_inde
       {previews.length === 0 && (
         <p className="text-xs text-gray-500">
           JPG・PNG・WebP・GIF（10MB以下）
+        </p>
+      )}
+    </div>
+  );
+}
+
+function VideoPanel({ addBlock }: { addBlock: AddBlockFn }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [videos, setVideos] = useState<{ src: string; name: string }[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFiles = useCallback((files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setError(null);
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith("video/")) return;
+      if (file.size > MAX_VIDEO_SIZE) {
+        setError("100MB 以下の動画を選択してください");
+        return;
+      }
+      const src = URL.createObjectURL(file);
+      setVideos((prev) => [...prev, { src, name: file.name }]);
+    });
+  }, []);
+
+  return (
+    <div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="video/mp4,video/webm,video/quicktime"
+        multiple
+        className="hidden"
+        onChange={(e) => handleFiles(e.target.files)}
+      />
+
+      <Button
+        size="sm"
+        variant="outline"
+        className="w-full text-xs border-gray-600 text-gray-200 mb-3"
+        onClick={() => inputRef.current?.click()}
+      >
+        + 動画を選択
+      </Button>
+
+      {error && <p className="text-xs text-red-400 mb-2">{error}</p>}
+
+      {videos.length > 0 && (
+        <div className="space-y-1">
+          <p className="text-xs text-gray-500 mb-1">クリックで挿入 / ドラッグで配置</p>
+          {videos.map((v, i) => (
+            <div
+              key={i}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData("text/video-src", v.src);
+                e.dataTransfer.setData("text/block-type", "video");
+                e.dataTransfer.effectAllowed = "copy";
+              }}
+              onClick={() => addBlock("video", undefined, { src: v.src, alt: v.name } as Partial<VideoContent>)}
+              className="flex items-center gap-2 p-2 rounded border border-gray-600 hover:border-blue-400 transition-colors cursor-grab active:cursor-grabbing"
+              title={v.name}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === "Enter" && addBlock("video", undefined, { src: v.src, alt: v.name } as Partial<VideoContent>)}
+            >
+              <Film size={16} className="text-gray-400 shrink-0" />
+              <span className="text-xs text-gray-300 truncate flex-1">{v.name}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {videos.length === 0 && (
+        <p className="text-xs text-gray-500">
+          MP4・WebM・MOV（100MB以下）
         </p>
       )}
     </div>

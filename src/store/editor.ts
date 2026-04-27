@@ -13,6 +13,7 @@ import type {
   SelectedElement,
   ElementStyle,
   EditingElement,
+  VideoContent,
 } from "@/types";
 import { generateId } from "@/lib/utils";
 
@@ -343,6 +344,19 @@ function getDefaultContent(type: BlockType): BlockContent {
         height: 400,
         opacity: 1,
       };
+    case "video":
+      return {
+        src: "",
+        alt: "動画",
+        width: 640,
+        height: 360,
+        autoplay: false,
+        controls: true,
+        loop: false,
+        muted: false,
+        object_fit: "contain",
+        opacity: 1,
+      } satisfies VideoContent;
     default:
       return {};
   }

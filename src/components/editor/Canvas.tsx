@@ -290,7 +290,12 @@ export function Canvas() {
   }
 
   function handlePaletteDragOver(e: React.DragEvent) {
-    if (!e.dataTransfer.types.includes("text/block-type")) return;
+    const types = e.dataTransfer.types;
+    const isAccepted =
+      types.includes("text/block-type") ||
+      types.includes("text/image-src") ||
+      types.includes("text/video-src");
+    if (!isAccepted) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = "copy";
     setIsPaletteDragOver(true);
@@ -299,10 +304,36 @@ export function Canvas() {
   function handlePaletteDrop(e: React.DragEvent) {
     e.preventDefault();
     setIsPaletteDragOver(false);
+    const afterIndex = getDropIndex(e.clientY);
+    const insertArg = afterIndex > 0 ? afterIndex - 1 : undefined;
+
+    // Image drag-drop from panel thumbnail
+    const imageSrc = e.dataTransfer.getData("text/image-src");
+    if (imageSrc) {
+      addBlock("image", insertArg, {
+        src: imageSrc,
+        alt: "画像",
+        object_fit: "cover",
+        height: 400,
+        opacity: 1,
+      });
+      return;
+    }
+
+    // Video drag-drop from panel thumbnail
+    const videoSrc = e.dataTransfer.getData("text/video-src");
+    if (videoSrc) {
+      addBlock("video", insertArg, {
+        src: videoSrc,
+        alt: "動画",
+      });
+      return;
+    }
+
+    // Generic block-type drop (text, blocks panel)
     const blockType = e.dataTransfer.getData("text/block-type") as BlockType;
     if (!blockType) return;
-    const insertIndex = getDropIndex(e.clientY);
-    addBlock(blockType, insertIndex > 0 ? insertIndex - 1 : undefined);
+    addBlock(blockType, insertArg);
   }
 
   // Click on canvas background deselects / exits editing
