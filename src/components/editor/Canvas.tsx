@@ -307,7 +307,7 @@ export function Canvas() {
     e.preventDefault();
     setIsPaletteDragOver(false);
     const afterIndex = getDropIndex(e.clientY);
-    const insertArg = afterIndex > 0 ? afterIndex - 1 : undefined;
+    const insertArg = afterIndex - 1; // -1 means insert at beginning
 
     // Image drag-drop from panel thumbnail
     const imageSrc = e.dataTransfer.getData("text/image-src");

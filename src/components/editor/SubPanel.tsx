@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 
 interface Props {
   category: IconBarCategory | null;
@@ -276,7 +276,62 @@ export function SubPanel({ category }: Props) {
                   );
                 })()}
 
-                {!["hero", "headline", "cta", "image"].includes(selectedBlock.block_type) && (
+                {selectedBlock.block_type === "video" && (() => {
+                  const c = selectedBlock.content as VideoContent;
+                  return (
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">高さ (px)</Label>
+                        <Input
+                          type="number"
+                          min={100}
+                          max={1200}
+                          className="h-8 text-xs bg-gray-700 border-gray-600 text-white"
+                          value={c.height ?? 360}
+                          onChange={(e) => updateBlock(selectedBlock.id, { height: Number(e.target.value) })}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">フィット</Label>
+                        <select
+                          className="w-full h-8 text-xs bg-gray-700 border border-gray-600 text-white rounded px-2"
+                          value={c.object_fit ?? "contain"}
+                          onChange={(e) => updateBlock(selectedBlock.id, { object_fit: e.target.value as VideoContent["object_fit"] })}
+                        >
+                          <option value="cover">カバー</option>
+                          <option value="contain">収める</option>
+                          <option value="fill">引き伸ばす</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">透明度 {Math.round((c.opacity ?? 1) * 100)}%</Label>
+                        <input
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.05}
+                          className="w-full accent-blue-500"
+                          value={c.opacity ?? 1}
+                          onChange={(e) => updateBlock(selectedBlock.id, { opacity: Number(e.target.value) })}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">角丸 {c.border_radius ?? 0}px</Label>
+                        <input
+                          type="range"
+                          min={0}
+                          max={48}
+                          step={2}
+                          className="w-full accent-blue-500"
+                          value={c.border_radius ?? 0}
+                          onChange={(e) => updateBlock(selectedBlock.id, { border_radius: Number(e.target.value) })}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {!["hero", "headline", "cta", "image", "video"].includes(selectedBlock.block_type) && (
                   <p className="text-xs text-gray-500">このブロックにはスタイル設定がありません</p>
                 )}
 
@@ -485,6 +540,12 @@ function VideoPanel({ addBlock }: { addBlock: AddBlockFn }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [videos, setVideos] = useState<{ src: string; name: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const blobUrlsRef = useRef<string[]>([]);
+
+  // Revoke all blob URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => { blobUrlsRef.current.forEach(URL.revokeObjectURL); };
+  }, []);
 
   const handleFiles = useCallback((files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -496,6 +557,7 @@ function VideoPanel({ addBlock }: { addBlock: AddBlockFn }) {
         return;
       }
       const src = URL.createObjectURL(file);
+      blobUrlsRef.current.push(src);
       setVideos((prev) => [...prev, { src, name: file.name }]);
     });
   }, []);
