@@ -11,7 +11,8 @@ export type BlockType =
   | "price"
   | "footer"
   | "image"
-  | "video";
+  | "video"
+  | "shape";
 export type MemberRole = "viewer" | "editor" | "admin";
 export type Tone = "professional" | "friendly" | "luxury" | "urgent";
 export type Viewport = "pc" | "sp" | "tab";
@@ -82,7 +83,8 @@ export type BlockContent =
   | PriceContent
   | FooterContent
   | ImageContent
-  | VideoContent;
+  | VideoContent
+  | ShapeContent;
 
 export interface HeroContent {
   headline: string;
@@ -195,6 +197,18 @@ export interface VideoContent {
   original_filename?: string;
   file_size_bytes?: number;
   duration_seconds?: number;
+  elementStyles?: Record<string, ElementStyle>;
+}
+
+export interface ShapeContent {
+  shape_type: "rect" | "circle" | "triangle" | "arrow" | "divider";
+  fill_color: string;
+  border_color?: string;
+  border_width?: number;
+  border_radius?: number;
+  width?: number;
+  height?: number;
+  opacity?: number;
   elementStyles?: Record<string, ElementStyle>;
 }
 

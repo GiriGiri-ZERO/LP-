@@ -14,6 +14,7 @@ import type {
   ElementStyle,
   EditingElement,
   VideoContent,
+  ShapeContent,
 } from "@/types";
 import { generateId } from "@/lib/utils";
 
@@ -366,6 +367,17 @@ function getDefaultContent(type: BlockType): BlockContent {
         object_fit: "contain",
         opacity: 1,
       } satisfies VideoContent;
+    case "shape":
+      return {
+        shape_type: "rect",
+        fill_color: "#e94560",
+        border_color: "#cc3045",
+        border_width: 0,
+        border_radius: 8,
+        width: 200,
+        height: 100,
+        opacity: 1,
+      } satisfies ShapeContent;
     default:
       return {};
   }

@@ -12,6 +12,7 @@ import { PriceBlock } from "./PriceBlock";
 import { FooterBlock } from "./FooterBlock";
 import { ImageBlock } from "./ImageBlock";
 import { VideoBlock } from "./VideoBlock";
+import { ShapeBlock } from "./ShapeBlock";
 import type {
   HeroContent,
   HeadlineContent,
@@ -24,6 +25,7 @@ import type {
   FooterContent,
   ImageContent,
   VideoContent,
+  ShapeContent,
 } from "@/types";
 
 interface Props {
@@ -84,6 +86,8 @@ function renderBlock(block: Block, selected: boolean, isEditing: boolean) {
       return <ImageBlock {...props} content={block.content as ImageContent} />;
     case "video":
       return <VideoBlock {...props} content={block.content as VideoContent} />;
+    case "shape":
+      return <ShapeBlock {...props} content={block.content as ShapeContent} />;
     default:
       return (
         <div className="p-8 bg-gray-100 text-gray-400 text-center">

@@ -335,6 +335,11 @@ export function Canvas() {
     // Generic block-type drop (text, blocks panel)
     const blockType = e.dataTransfer.getData("text/block-type") as BlockType;
     if (!blockType) return;
+    if (blockType === "shape") {
+      const shapeType = e.dataTransfer.getData("text/shape-type") as "rect" | "circle" | "triangle" | "arrow" | "divider";
+      addBlock("shape", insertArg, shapeType ? { shape_type: shapeType } : undefined);
+      return;
+    }
     addBlock(blockType, insertArg);
   }
 

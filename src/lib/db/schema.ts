@@ -30,6 +30,7 @@ export const blockTypeEnum = pgEnum("block_type", [
   "footer",
   "image",
   "video",
+  "shape",
 ]);
 export const memberRoleEnum = pgEnum("member_role", [
   "viewer",

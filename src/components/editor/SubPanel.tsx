@@ -3,13 +3,13 @@
 import { useEditorStore } from "@/store/editor";
 import { useShallow } from "zustand/react/shallow";
 import type { IconBarCategory } from "./IconBar";
-import type { BlockType, BlockContent, HeroContent, HeadlineContent, CTAContent, ImageContent, VideoContent } from "@/types";
+import type { BlockType, BlockContent, HeroContent, HeadlineContent, CTAContent, ImageContent, VideoContent, ShapeContent } from "@/types";
 import { Sparkles, Type, LayoutTemplate, AlignLeft, AlignCenter, AlignRight, ImageIcon, Film } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { useRef, useState, useCallback, useEffect } from "react";
+import React, { useRef, useState, useCallback, useEffect } from "react";
 
 interface Props {
   category: IconBarCategory | null;
@@ -99,6 +99,10 @@ export function SubPanel({ category }: Props) {
               ))}
             </div>
           </div>
+        )}
+
+        {category === "shape" && (
+          <ShapePalette addBlock={addBlock} />
         )}
 
         {category === "style" && doc && (
@@ -331,7 +335,97 @@ export function SubPanel({ category }: Props) {
                   );
                 })()}
 
-                {!["hero", "headline", "cta", "image", "video"].includes(selectedBlock.block_type) && (
+                {selectedBlock.block_type === "shape" && (() => {
+                  const c = selectedBlock.content as ShapeContent;
+                  return (
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">塗り色</Label>
+                        <div className="flex gap-2 items-center">
+                          <input type="color" value={c.fill_color ?? "#e94560"}
+                            onChange={(e) => updateBlock(selectedBlock.id, { fill_color: e.target.value })}
+                            className="w-8 h-8 rounded cursor-pointer border border-gray-600" />
+                          <Input className="h-8 text-xs bg-gray-700 border-gray-600 text-white"
+                            value={c.fill_color ?? "#e94560"}
+                            onChange={(e) => updateBlock(selectedBlock.id, { fill_color: e.target.value })} />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">枠線色</Label>
+                        <div className="flex gap-2 items-center">
+                          <input type="color" value={c.border_color ?? "#cc3045"}
+                            onChange={(e) => updateBlock(selectedBlock.id, { border_color: e.target.value })}
+                            className="w-8 h-8 rounded cursor-pointer border border-gray-600" />
+                          <Input className="h-8 text-xs bg-gray-700 border-gray-600 text-white"
+                            value={c.border_color ?? "#cc3045"}
+                            onChange={(e) => updateBlock(selectedBlock.id, { border_color: e.target.value })} />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">枠線幅 {c.border_width ?? 0}px</Label>
+                        <input
+                          type="range"
+                          min={0}
+                          max={16}
+                          step={1}
+                          className="w-full accent-blue-500"
+                          value={c.border_width ?? 0}
+                          onChange={(e) => updateBlock(selectedBlock.id, { border_width: Number(e.target.value) })}
+                        />
+                      </div>
+                      {(c.shape_type === "rect" || !c.shape_type) && (
+                        <div>
+                          <Label className="text-xs text-gray-400 mb-1 block">角丸 {c.border_radius ?? 8}px</Label>
+                          <input
+                            type="range"
+                            min={0}
+                            max={100}
+                            step={2}
+                            className="w-full accent-blue-500"
+                            value={c.border_radius ?? 8}
+                            onChange={(e) => updateBlock(selectedBlock.id, { border_radius: Number(e.target.value) })}
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">幅 (px)</Label>
+                        <Input
+                          type="number"
+                          min={20}
+                          max={1200}
+                          className="h-8 text-xs bg-gray-700 border-gray-600 text-white"
+                          value={c.width ?? 200}
+                          onChange={(e) => updateBlock(selectedBlock.id, { width: Number(e.target.value) })}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">高さ (px)</Label>
+                        <Input
+                          type="number"
+                          min={2}
+                          max={800}
+                          className="h-8 text-xs bg-gray-700 border-gray-600 text-white"
+                          value={c.height ?? 100}
+                          onChange={(e) => updateBlock(selectedBlock.id, { height: Number(e.target.value) })}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">透明度 {Math.round((c.opacity ?? 1) * 100)}%</Label>
+                        <input
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.05}
+                          className="w-full accent-blue-500"
+                          value={c.opacity ?? 1}
+                          onChange={(e) => updateBlock(selectedBlock.id, { opacity: Number(e.target.value) })}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {!["hero", "headline", "cta", "image", "video", "shape"].includes(selectedBlock.block_type) && (
                   <p className="text-xs text-gray-500">このブロックにはスタイル設定がありません</p>
                 )}
 
@@ -412,6 +506,67 @@ export function SubPanel({ category }: Props) {
         )}
       </div>
     </aside>
+  );
+}
+
+const SHAPE_ITEMS: { type: ShapeContent["shape_type"]; label: string; preview: React.ReactNode }[] = [
+  {
+    type: "rect",
+    label: "四角形",
+    preview: <div style={{ width: 36, height: 24, backgroundColor: "#e94560", borderRadius: 4 }} />,
+  },
+  {
+    type: "circle",
+    label: "円形",
+    preview: <div style={{ width: 28, height: 28, backgroundColor: "#e94560", borderRadius: "50%" }} />,
+  },
+  {
+    type: "triangle",
+    label: "三角形",
+    preview: (
+      <div style={{ width: 36, height: 30, backgroundColor: "#e94560", clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }} />
+    ),
+  },
+  {
+    type: "arrow",
+    label: "矢印",
+    preview: (
+      <div style={{ width: 40, height: 24, backgroundColor: "#e94560", clipPath: "polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%)" }} />
+    ),
+  },
+  {
+    type: "divider",
+    label: "区切り線",
+    preview: <div style={{ width: 44, height: 4, backgroundColor: "#e94560", borderRadius: 2 }} />,
+  },
+];
+
+function ShapePalette({ addBlock }: { addBlock: AddBlockFn }) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">図形</span>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {SHAPE_ITEMS.map((item) => (
+          <button
+            key={item.type}
+            onClick={() => addBlock("shape", undefined, { shape_type: item.type } as Partial<ShapeContent>)}
+            draggable
+            onDragStart={(e) => {
+              e.dataTransfer.setData("text/block-type", "shape");
+              e.dataTransfer.setData("text/shape-type", item.type);
+              e.dataTransfer.effectAllowed = "copy";
+            }}
+            className="flex flex-col items-center justify-center gap-1.5 h-16 rounded-lg border border-gray-600 hover:border-blue-400 hover:bg-gray-700 transition-colors cursor-grab active:cursor-grabbing"
+            title={item.label}
+          >
+            {item.preview}
+            <span className="text-xs text-gray-400">{item.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
