@@ -11,35 +11,23 @@ const TOOLBAR_HEIGHT = 40;
 const GAP = 8;
 
 export function FloatingElementToolbar() {
-  const { selectedElement, updateElementStyle, editingBlockId } = useEditorStore(
+  const { selectedElement, updateElementStyle, editingBlockId, blocks } = useEditorStore(
     useShallow((s) => ({
       selectedElement: s.selectedElement,
       updateElementStyle: s.updateElementStyle,
       editingBlockId: s.editingBlockId,
+      blocks: s.blocks,
     }))
   );
 
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [style, setStyle] = useState<ElementStyle>({});
 
+  useEffect(() => { setMounted(true); }, []);
+
+  // Re-measure position whenever selected element or block content changes
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!selectedElement) {
-      setPos(null);
-      setStyle({});
-      return;
-    }
-    // Read current element style from store without subscribing
-    const state = useEditorStore.getState();
-    const block = state.blocks.find((b) => b.id === selectedElement.blockId);
-    const content = block?.content as { elementStyles?: Record<string, ElementStyle> } | undefined;
-    setStyle(content?.elementStyles?.[selectedElement.elementId] ?? {});
-
-    // Calculate toolbar position from DOM
+    if (!selectedElement) { setPos(null); return; }
     const el = document.querySelector<HTMLElement>(
       `[data-el-block="${selectedElement.blockId}"][data-el-id="${selectedElement.elementId}"]`
     );
@@ -49,13 +37,18 @@ export function FloatingElementToolbar() {
       top: Math.max(4, rect.top - TOOLBAR_HEIGHT - GAP),
       left: Math.max(8, rect.left),
     });
-  }, [selectedElement]);
+  }, [selectedElement, blocks]);
 
   if (!mounted || !selectedElement || editingBlockId || !pos) return null;
 
+  // Derive style directly from store — stays in sync with drag-move and resize
+  const currentBlock = blocks.find((b) => b.id === selectedElement.blockId);
+  const style: ElementStyle =
+    (currentBlock?.content as { elementStyles?: Record<string, ElementStyle> } | undefined)
+      ?.elementStyles?.[selectedElement.elementId] ?? {};
+
   const update = (patch: Partial<ElementStyle>) => {
     updateElementStyle(selectedElement.blockId, selectedElement.elementId, patch);
-    setStyle((prev) => ({ ...prev, ...patch }));
   };
 
   const toolbar = (
@@ -80,7 +73,7 @@ export function FloatingElementToolbar() {
           <input
             type="number"
             min={10}
-            max={72}
+            max={200}
             step={2}
             value={style.fontSize ?? 16}
             onChange={(e) => update({ fontSize: Number(e.target.value) })}

@@ -52,6 +52,7 @@ export function ResizeHandleOverlay() {
     return () => {
       window.removeEventListener("scroll", measureEl, true);
       window.removeEventListener("resize", measureEl);
+      cancelAnimationFrame(rafRef.current);
     };
   }, [measureEl]);
 
@@ -61,6 +62,7 @@ export function ResizeHandleOverlay() {
     e.stopPropagation();
 
     const startY = e.clientY;
+    const startX = e.clientX;
     const { blockId, elementId, elementType } = selectedElement;
 
     // Snapshot initial values at drag start from the store
@@ -85,12 +87,15 @@ export function ResizeHandleOverlay() {
 
     function onMouseMove(me: MouseEvent) {
       const dy = me.clientY - startY;
-      const delta = isTopHandle ? -dy : dy;
+      const dx = me.clientX - startX;
 
       if (elementType === "text") {
+        // Side handles use dx; top/bottom handles use dy
+        const delta = isSideHandle ? dx : (isTopHandle ? -dy : dy);
         const newSize = Math.max(8, Math.min(200, initFontSize + delta * 0.5));
         updateElementStyle(blockId, elementId, { fontSize: Math.round(newSize) });
       } else if (elementType === "image" && !isSideHandle) {
+        const delta = isTopHandle ? -dy : dy;
         const newH = Math.max(50, Math.min(1200, initHeight + delta));
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         updateBlock(blockId, { height: Math.round(newH) } as any);
