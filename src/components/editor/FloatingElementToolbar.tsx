@@ -11,13 +11,23 @@ const TOOLBAR_HEIGHT = 40;
 const GAP = 8;
 
 export function FloatingElementToolbar() {
-  const { selectedElement, updateElementStyle, editingBlockId, blocks } = useEditorStore(
+  const { selectedElement, updateElementStyle, editingBlockId, isDraggingElement } = useEditorStore(
     useShallow((s) => ({
       selectedElement: s.selectedElement,
       updateElementStyle: s.updateElementStyle,
       editingBlockId: s.editingBlockId,
-      blocks: s.blocks,
+      isDraggingElement: s.isDraggingElement,
     }))
+  );
+
+  // Targeted subscription: only re-render when THIS element's style changes
+  const style: ElementStyle = useEditorStore(
+    useShallow((s) => {
+      if (!s.selectedElement) return {};
+      const block = s.blocks.find(b => b.id === s.selectedElement!.blockId);
+      const content = block?.content as { elementStyles?: Record<string, ElementStyle> } | undefined;
+      return content?.elementStyles?.[s.selectedElement.elementId] ?? {};
+    })
   );
 
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
@@ -25,7 +35,7 @@ export function FloatingElementToolbar() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Re-measure position whenever selected element or block content changes
+  // Re-measure position when selected element or its style changes (e.g. fontSize resize)
   useEffect(() => {
     if (!selectedElement) { setPos(null); return; }
     const el = document.querySelector<HTMLElement>(
@@ -37,15 +47,9 @@ export function FloatingElementToolbar() {
       top: Math.max(4, rect.top - TOOLBAR_HEIGHT - GAP),
       left: Math.max(8, rect.left),
     });
-  }, [selectedElement, blocks]);
+  }, [selectedElement, style]);
 
-  if (!mounted || !selectedElement || editingBlockId || !pos) return null;
-
-  // Derive style directly from store — stays in sync with drag-move and resize
-  const currentBlock = blocks.find((b) => b.id === selectedElement.blockId);
-  const style: ElementStyle =
-    (currentBlock?.content as { elementStyles?: Record<string, ElementStyle> } | undefined)
-      ?.elementStyles?.[selectedElement.elementId] ?? {};
+  if (!mounted || !selectedElement || editingBlockId || isDraggingElement || !pos) return null;
 
   const update = (patch: Partial<ElementStyle>) => {
     updateElementStyle(selectedElement.blockId, selectedElement.elementId, patch);

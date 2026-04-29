@@ -248,6 +248,7 @@ export function Canvas() {
   const addBlock = useEditorStore((s) => s.addBlock);
   const reorderBlocks = useEditorStore((s) => s.reorderBlocks);
   const updateElementStyle = useEditorStore((s) => s.updateElementStyle);
+  const setIsDraggingElement = useEditorStore((s) => s.setIsDraggingElement);
   const viewport = useEditorStore((s) => s.viewport);
 
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
@@ -387,6 +388,7 @@ export function Canvas() {
         hasMoved = true;
         setSelectedElement({ blockId, elementId, elementType });
         selectBlock(blockId);
+        setIsDraggingElement(true);
         document.body.style.userSelect = "none";
         document.body.style.cursor = "move";
       }
@@ -399,13 +401,14 @@ export function Canvas() {
     function onMouseUp() {
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
+      setIsDraggingElement(false);
       document.body.style.userSelect = "";
       document.body.style.cursor = "";
     }
 
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
-  }, [editingBlockId, updateElementStyle, setSelectedElement, selectBlock]);
+  }, [editingBlockId, updateElementStyle, setSelectedElement, selectBlock, setIsDraggingElement]);
 
   const viewportWidth = {
     pc: "100%",

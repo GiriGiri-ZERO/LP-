@@ -51,6 +51,9 @@ interface EditorState {
   editingElement: EditingElement | null;
   setEditingElement: (e: EditingElement | null) => void;
 
+  isDraggingElement: boolean;
+  setIsDraggingElement: (v: boolean) => void;
+
   updateTheme: (theme: Partial<Theme>) => void;
   setIsSaving: (v: boolean) => void;
   setIsDirty: (v: boolean) => void;
@@ -66,6 +69,7 @@ export const useEditorStore = create<EditorState>()(
     editingBlockId: null,
     selectedElement: null,
     editingElement: null,
+    isDraggingElement: false,
     activeTab: "preview",
     viewport: "pc",
     isDirty: false,
@@ -219,6 +223,11 @@ export const useEditorStore = create<EditorState>()(
         state.editingElement = e;
         // Keep editingBlockId in sync for backward-compat with blocks that still use isEditing prop
         state.editingBlockId = e?.blockId ?? null;
+      }),
+
+    setIsDraggingElement: (v) =>
+      set((state) => {
+        state.isDraggingElement = v;
       }),
 
     updateElementStyle: (blockId, elementId, style) =>
