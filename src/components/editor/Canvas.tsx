@@ -391,7 +391,7 @@ export function Canvas() {
           if (elTarget) {
             const elementId = elTarget.getAttribute("data-el-id")!;
             const blockId = elTarget.getAttribute("data-el-block")!;
-            const elementType = elTarget.getAttribute("data-el-type") as "text" | "shape";
+            const elementType = elTarget.getAttribute("data-el-type") as "text" | "image" | "shape";
             setSelectedElement({ blockId, elementId, elementType });
             selectBlock(blockId);
             return;

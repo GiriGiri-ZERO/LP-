@@ -31,7 +31,7 @@ export interface ElementStyle {
 export interface SelectedElement {
   blockId: string;
   elementId: string;
-  elementType: "text" | "shape";
+  elementType: "text" | "image" | "shape";
 }
 
 export interface EditingElement {
