@@ -24,7 +24,8 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Block, BlockType, ElementStyle } from "@/types";
+import type { Block, BlockType, ElementStyle, OverlayElement } from "@/types";
+import { generateId } from "@/lib/utils";
 import { GripVertical, Plus, ChevronUp, ChevronDown, Copy, Trash2 } from "lucide-react";
 
 // All available block types for the add-block popup
@@ -248,6 +249,7 @@ export function Canvas() {
   const addBlock = useEditorStore((s) => s.addBlock);
   const reorderBlocks = useEditorStore((s) => s.reorderBlocks);
   const updateElementStyle = useEditorStore((s) => s.updateElementStyle);
+  const addOverlayElement = useEditorStore((s) => s.addOverlayElement);
   const setIsDraggingElement = useEditorStore((s) => s.setIsDraggingElement);
   const viewport = useEditorStore((s) => s.viewport);
 
@@ -295,6 +297,7 @@ export function Canvas() {
     const types = e.dataTransfer.types;
     const isAccepted =
       types.includes("text/block-type") ||
+      types.includes("text/element-type") ||
       types.includes("text/image-src") ||
       types.includes("text/video-src");
     if (!isAccepted) return;
@@ -306,6 +309,53 @@ export function Canvas() {
   function handlePaletteDrop(e: React.DragEvent) {
     e.preventDefault();
     setIsPaletteDragOver(false);
+
+    // Text/shape element drop → add as overlay element at cursor position
+    const elementType = e.dataTransfer.getData("text/element-type");
+    if (elementType) {
+      const blockEls = canvasContentRef.current
+        ? Array.from(canvasContentRef.current.querySelectorAll("[data-block-id]"))
+        : [];
+
+      let targetEl: Element | null = null;
+      for (const el of blockEls) {
+        const r = el.getBoundingClientRect();
+        if (e.clientY >= r.top && e.clientY <= r.bottom) { targetEl = el; break; }
+      }
+      if (!targetEl && blockEls.length > 0) {
+        // Nearest block by vertical distance
+        let minDist = Infinity;
+        for (const el of blockEls) {
+          const r = el.getBoundingClientRect();
+          const dist = Math.min(Math.abs(e.clientY - r.top), Math.abs(e.clientY - r.bottom));
+          if (dist < minDist) { minDist = dist; targetEl = el; }
+        }
+      }
+
+      if (targetEl) {
+        const blockId = targetEl.getAttribute("data-block-id")!;
+        const blockRect = targetEl.getBoundingClientRect();
+        const x = Math.max(0, Math.round(e.clientX - blockRect.left));
+        const y = Math.max(0, Math.round(e.clientY - blockRect.top));
+
+        const newEl: OverlayElement = {
+          id: generateId(),
+          type: elementType === "headline" ? "text" : "text",
+          text: elementType === "headline" ? "見出しテキスト" : "本文テキストをここに入力",
+        };
+        addOverlayElement(blockId, newEl);
+        updateElementStyle(blockId, newEl.id, {
+          offsetX: x,
+          offsetY: y,
+          color: "#1a1a1a",
+          fontSize: elementType === "headline" ? 24 : 16,
+          fontWeight: elementType === "headline" ? "bold" : "normal",
+        });
+        return;
+      }
+      // No blocks exist: fall through to create a new block
+    }
+
     const afterIndex = getDropIndex(e.clientY);
     const insertArg = afterIndex - 1; // -1 means insert at beginning
 
@@ -360,7 +410,12 @@ export function Canvas() {
     if (elTarget) {
       const elementId = elTarget.getAttribute("data-el-id")!;
       const blockId = elTarget.getAttribute("data-el-block")!;
-      setEditingElement({ blockId, elementId });
+      const isOverlay = useEditorStore.getState().blocks
+        .find((b) => b.id === blockId)
+        ?.overlayElements?.some((el) => el.id === elementId);
+      if (!isOverlay) {
+        setEditingElement({ blockId, elementId });
+      }
       selectBlock(blockId);
     }
   }, [setEditingElement, selectBlock]);

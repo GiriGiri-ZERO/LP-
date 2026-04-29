@@ -4,17 +4,19 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useEditorStore } from "@/store/editor";
 import { useShallow } from "zustand/react/shallow";
-import { AlignLeft, AlignCenter, AlignRight } from "lucide-react";
+import { AlignLeft, AlignCenter, AlignRight, Trash2 } from "lucide-react";
 import type { ElementStyle } from "@/types";
 
 const TOOLBAR_HEIGHT = 40;
 const GAP = 8;
 
 export function FloatingElementToolbar() {
-  const { selectedElement, updateElementStyle, editingBlockId, isDraggingElement } = useEditorStore(
+  const { selectedElement, updateElementStyle, removeOverlayElement, setSelectedElement, editingBlockId, isDraggingElement } = useEditorStore(
     useShallow((s) => ({
       selectedElement: s.selectedElement,
       updateElementStyle: s.updateElementStyle,
+      removeOverlayElement: s.removeOverlayElement,
+      setSelectedElement: s.setSelectedElement,
       editingBlockId: s.editingBlockId,
       isDraggingElement: s.isDraggingElement,
     }))
@@ -27,6 +29,15 @@ export function FloatingElementToolbar() {
       const block = s.blocks.find(b => b.id === s.selectedElement!.blockId);
       const content = block?.content as { elementStyles?: Record<string, ElementStyle> } | undefined;
       return content?.elementStyles?.[s.selectedElement.elementId] ?? {};
+    })
+  );
+
+  // Detect if selected element is an overlay element (can be deleted)
+  const isOverlay = useEditorStore(
+    useShallow((s) => {
+      if (!s.selectedElement) return false;
+      const block = s.blocks.find(b => b.id === s.selectedElement!.blockId);
+      return block?.overlayElements?.some(el => el.id === s.selectedElement!.elementId) ?? false;
     })
   );
 
@@ -53,6 +64,11 @@ export function FloatingElementToolbar() {
 
   const update = (patch: Partial<ElementStyle>) => {
     updateElementStyle(selectedElement.blockId, selectedElement.elementId, patch);
+  };
+
+  const handleDelete = () => {
+    removeOverlayElement(selectedElement.blockId, selectedElement.elementId);
+    setSelectedElement(null);
   };
 
   const toolbar = (
@@ -145,6 +161,18 @@ export function FloatingElementToolbar() {
               <button onClick={() => update({ offsetX: 0, offsetY: 0 })} className="px-1.5 h-6 text-xs rounded text-gray-500 hover:bg-gray-100" title="位置をリセット">↩ リセット</button>
             </>
           ) : null}
+        </>
+      )}
+      {isOverlay && (
+        <>
+          <div className="w-px h-5 bg-gray-200 mx-0.5" />
+          <button
+            onClick={handleDelete}
+            className="w-6 h-6 rounded flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors"
+            title="削除"
+          >
+            <Trash2 size={12} />
+          </button>
         </>
       )}
     </div>

@@ -61,6 +61,13 @@ export interface ProductContext {
   tone: Tone;
 }
 
+export interface OverlayElement {
+  id: string;
+  type: "text" | "shape";
+  text?: string;
+  shapeType?: "rect" | "circle" | "triangle" | "arrow" | "divider";
+}
+
 export interface Block {
   id: string;
   document_id: string;
@@ -70,6 +77,7 @@ export interface Block {
   is_ai_generated: boolean;
   created_at: string;
   updated_at: string;
+  overlayElements?: OverlayElement[];
 }
 
 export type BlockContent =

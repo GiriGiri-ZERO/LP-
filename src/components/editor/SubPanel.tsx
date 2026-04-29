@@ -3,7 +3,7 @@
 import { useEditorStore } from "@/store/editor";
 import { useShallow } from "zustand/react/shallow";
 import type { IconBarCategory } from "./IconBar";
-import type { BlockType, BlockContent, HeroContent, HeadlineContent, CTAContent, ImageContent, VideoContent, ShapeContent } from "@/types";
+import type { BlockType, BlockContent, HeroContent, HeadlineContent, CTAContent, ImageContent, VideoContent, ShapeContent, ElementStyle } from "@/types";
 import { Sparkles, Type, LayoutTemplate, AlignLeft, AlignCenter, AlignRight, ImageIcon, Film } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +28,7 @@ const BLOCK_TYPES: { type: BlockType; label: string; emoji: string }[] = [
 ];
 
 export function SubPanel({ category }: Props) {
-  const { addBlock, updateTheme, updateBlock, document: doc, blocks, selectedBlockId } = useEditorStore(
+  const { addBlock, updateTheme, updateBlock, document: doc, blocks, selectedBlockId, selectedElement, updateElementStyle } = useEditorStore(
     useShallow((s) => ({
       addBlock: s.addBlock,
       updateTheme: s.updateTheme,
@@ -36,7 +36,19 @@ export function SubPanel({ category }: Props) {
       document: s.document,
       blocks: s.blocks,
       selectedBlockId: s.selectedBlockId,
+      selectedElement: s.selectedElement,
+      updateElementStyle: s.updateElementStyle,
     }))
+  );
+
+  // Targeted subscription for selected element's style
+  const elementStyle: ElementStyle = useEditorStore(
+    useShallow((s) => {
+      if (!s.selectedElement) return {};
+      const block = s.blocks.find((b) => b.id === s.selectedElement!.blockId);
+      const content = block?.content as { elementStyles?: Record<string, ElementStyle> } | undefined;
+      return content?.elementStyles?.[s.selectedElement.elementId] ?? {};
+    })
   );
 
   const selectedBlock = selectedBlockId ? blocks.find((b) => b.id === selectedBlockId) : null;
@@ -89,7 +101,7 @@ export function SubPanel({ category }: Props) {
                   onClick={() => addBlock(t)}
                   draggable
                   onDragStart={(e) => {
-                    e.dataTransfer.setData("text/block-type", t);
+                    e.dataTransfer.setData("text/element-type", t);
                     e.dataTransfer.effectAllowed = "copy";
                   }}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-200 hover:bg-gray-700 transition-colors text-left cursor-grab active:cursor-grabbing"
@@ -115,6 +127,51 @@ export function SubPanel({ category }: Props) {
                     選択中のブロック
                   </span>
                 </div>
+
+                {/* Per-element color controls */}
+                {selectedElement && selectedElement.blockId === selectedBlockId && (
+                  <div className="space-y-3 mb-3 pb-3 border-b border-gray-700">
+                    <span className="text-xs font-semibold text-green-400 uppercase tracking-wider block">
+                      選択中の要素
+                    </span>
+                    {selectedElement.elementType === "text" && (
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">文字色</Label>
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="color"
+                            value={elementStyle.color ?? "#000000"}
+                            onChange={(e) => updateElementStyle(selectedElement.blockId, selectedElement.elementId, { color: e.target.value })}
+                            className="w-8 h-8 rounded cursor-pointer border border-gray-600"
+                          />
+                          <Input
+                            className="h-8 text-xs bg-gray-700 border-gray-600 text-white"
+                            value={elementStyle.color ?? "#000000"}
+                            onChange={(e) => updateElementStyle(selectedElement.blockId, selectedElement.elementId, { color: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {selectedElement.elementType === "shape" && (
+                      <div>
+                        <Label className="text-xs text-gray-400 mb-1 block">塗り色</Label>
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="color"
+                            value={elementStyle.backgroundColor ?? "#e94560"}
+                            onChange={(e) => updateElementStyle(selectedElement.blockId, selectedElement.elementId, { backgroundColor: e.target.value })}
+                            className="w-8 h-8 rounded cursor-pointer border border-gray-600"
+                          />
+                          <Input
+                            className="h-8 text-xs bg-gray-700 border-gray-600 text-white"
+                            value={elementStyle.backgroundColor ?? "#e94560"}
+                            onChange={(e) => updateElementStyle(selectedElement.blockId, selectedElement.elementId, { backgroundColor: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {selectedBlock.block_type === "hero" && (() => {
                   const c = selectedBlock.content as HeroContent;
@@ -742,26 +799,35 @@ function VideoPanel({ addBlock }: { addBlock: AddBlockFn }) {
       {videos.length > 0 && (
         <div className="space-y-1">
           <p className="text-xs text-gray-500 mb-1">クリックで挿入 / ドラッグで配置</p>
-          {videos.map((v, i) => (
-            <div
-              key={i}
-              draggable
-              onDragStart={(e) => {
-                e.dataTransfer.setData("text/video-src", v.src);
-                e.dataTransfer.setData("text/block-type", "video");
-                e.dataTransfer.effectAllowed = "copy";
-              }}
-              onClick={() => addBlock("video", undefined, { src: v.src, alt: v.name } as Partial<VideoContent>)}
-              className="flex items-center gap-2 p-2 rounded border border-gray-600 hover:border-blue-400 transition-colors cursor-grab active:cursor-grabbing"
-              title={v.name}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => e.key === "Enter" && addBlock("video", undefined, { src: v.src, alt: v.name } as Partial<VideoContent>)}
-            >
-              <Film size={16} className="text-gray-400 shrink-0" />
-              <span className="text-xs text-gray-300 truncate flex-1">{v.name}</span>
-            </div>
-          ))}
+          <div className="grid grid-cols-2 gap-1">
+            {videos.map((v, i) => (
+              <button
+                key={i}
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("text/video-src", v.src);
+                  e.dataTransfer.setData("text/block-type", "video");
+                  e.dataTransfer.effectAllowed = "copy";
+                }}
+                onClick={() => addBlock("video", undefined, { src: v.src, alt: v.name } as Partial<VideoContent>)}
+                className="aspect-video rounded overflow-hidden border border-gray-600 hover:border-blue-400 transition-colors cursor-grab active:cursor-grabbing relative"
+                title={v.name}
+              >
+                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                <video
+                  src={v.src}
+                  preload="metadata"
+                  muted
+                  playsInline
+                  onLoadedMetadata={(e) => { (e.target as HTMLVideoElement).currentTime = 0.1; }}
+                  className="w-full h-full object-cover pointer-events-none"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-1 py-0.5">
+                  <span className="text-xs text-gray-200 truncate block">{v.name}</span>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

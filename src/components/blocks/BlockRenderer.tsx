@@ -13,6 +13,7 @@ import { FooterBlock } from "./FooterBlock";
 import { ImageBlock } from "./ImageBlock";
 import { VideoBlock } from "./VideoBlock";
 import { ShapeBlock } from "./ShapeBlock";
+import { OverlayLayer } from "./OverlayLayer";
 import type {
   HeroContent,
   HeadlineContent,
@@ -39,11 +40,12 @@ interface Props {
 export function BlockRenderer({ block, selected, isEditing, onClick, onDoubleClick }: Props) {
   return (
     <div
-      className="relative group cursor-pointer"
+      className="relative group cursor-pointer overflow-visible"
       onClick={onClick}
       onDoubleClick={onDoubleClick}
     >
       {renderBlock(block, selected, isEditing)}
+      <OverlayLayer block={block} />
       <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
         <span className="bg-black/60 text-white text-xs px-2 py-0.5 rounded">
           {block.block_type}

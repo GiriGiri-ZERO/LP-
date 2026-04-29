@@ -15,6 +15,7 @@ import type {
   EditingElement,
   VideoContent,
   ShapeContent,
+  OverlayElement,
 } from "@/types";
 import { generateId } from "@/lib/utils";
 
@@ -54,6 +55,9 @@ interface EditorState {
 
   isDraggingElement: boolean;
   setIsDraggingElement: (v: boolean) => void;
+
+  addOverlayElement: (blockId: string, el: OverlayElement) => void;
+  removeOverlayElement: (blockId: string, elementId: string) => void;
 
   updateTheme: (theme: Partial<Theme>) => void;
   setIsSaving: (v: boolean) => void;
@@ -239,6 +243,25 @@ export const useEditorStore = create<EditorState>()(
         if (!content.elementStyles) content.elementStyles = {};
         if (!content.elementStyles[elementId]) content.elementStyles[elementId] = {};
         Object.assign(content.elementStyles[elementId], style);
+        block.updated_at = new Date().toISOString();
+        state.isDirty = true;
+      }),
+
+    addOverlayElement: (blockId, el) =>
+      set((state) => {
+        const block = state.blocks.find((b) => b.id === blockId);
+        if (!block) return;
+        if (!block.overlayElements) block.overlayElements = [];
+        block.overlayElements.push(el);
+        block.updated_at = new Date().toISOString();
+        state.isDirty = true;
+      }),
+
+    removeOverlayElement: (blockId, elementId) =>
+      set((state) => {
+        const block = state.blocks.find((b) => b.id === blockId);
+        if (!block) return;
+        block.overlayElements = block.overlayElements?.filter((el) => el.id !== elementId);
         block.updated_at = new Date().toISOString();
         state.isDirty = true;
       }),
