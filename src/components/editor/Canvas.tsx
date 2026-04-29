@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useEditorStore } from "@/store/editor";
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import { FloatingElementToolbar } from "@/components/editor/FloatingElementToolbar";
+import { ResizeHandleOverlay } from "@/components/editor/ResizeHandleOverlay";
 import {
   DndContext,
   closestCenter,
@@ -13,7 +14,6 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
-  DragOverEvent,
   DragOverlay,
   useDroppable,
 } from "@dnd-kit/core";
@@ -481,6 +481,7 @@ export function Canvas() {
       </div>
     </div>
     <FloatingElementToolbar />
+    <ResizeHandleOverlay />
     </>
   );
 }

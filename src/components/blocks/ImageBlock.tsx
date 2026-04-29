@@ -11,12 +11,15 @@ interface Props {
   isEditing: boolean;
 }
 
-export function ImageBlock({ content, selected }: Props) {
+export function ImageBlock({ blockId, content, selected }: Props) {
   const { src, alt, object_fit = "cover", height = 400, border_radius = 0, opacity = 1 } = content;
 
   if (!src) {
     return (
       <div
+        data-el-block={blockId}
+        data-el-id="image"
+        data-el-type="image"
         className={cn(
           "w-full flex flex-col items-center justify-center gap-2 bg-gray-100 text-gray-400 border-2 border-dashed border-gray-300",
           selected && "ring-2 ring-blue-500"
@@ -31,6 +34,9 @@ export function ImageBlock({ content, selected }: Props) {
 
   return (
     <div
+      data-el-block={blockId}
+      data-el-id="image"
+      data-el-type="image"
       className={cn("w-full overflow-hidden", selected && "ring-2 ring-blue-500")}
       style={{ height, borderRadius: border_radius }}
     >
