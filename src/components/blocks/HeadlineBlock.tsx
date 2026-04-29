@@ -44,6 +44,7 @@ export function HeadlineBlock({ blockId, content, selected }: Props) {
             fontSize: content.elementStyles?.text?.fontSize ? `${content.elementStyles.text.fontSize}px` : undefined,
             fontWeight: content.elementStyles?.text?.fontWeight ?? undefined,
             fontStyle: content.elementStyles?.text?.fontStyle ?? undefined,
+            transform: `translate(${content.elementStyles?.text?.offsetX ?? 0}px, ${content.elementStyles?.text?.offsetY ?? 0}px)`,
           }}
           data-el-block={blockId}
           data-el-id="text"

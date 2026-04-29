@@ -102,6 +102,12 @@ export function FloatingElementToolbar() {
           <button onClick={() => update({ textAlign: "left" })} className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${style.textAlign === "left" ? "bg-gray-200" : "hover:bg-gray-100"}`} title="左揃え"><AlignLeft size={12} /></button>
           <button onClick={() => update({ textAlign: "center" })} className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${style.textAlign === "center" ? "bg-gray-200" : "hover:bg-gray-100"}`} title="中央揃え"><AlignCenter size={12} /></button>
           <button onClick={() => update({ textAlign: "right" })} className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${style.textAlign === "right" ? "bg-gray-200" : "hover:bg-gray-100"}`} title="右揃え"><AlignRight size={12} /></button>
+          {(style.offsetX || style.offsetY) ? (
+            <>
+              <div className="w-px h-5 bg-gray-200 mx-0.5" />
+              <button onClick={() => update({ offsetX: 0, offsetY: 0 })} className="px-1.5 h-6 text-xs rounded text-gray-500 hover:bg-gray-100" title="位置をリセット">↩ リセット</button>
+            </>
+          ) : null}
         </>
       ) : (
         <>
@@ -136,6 +142,12 @@ export function FloatingElementToolbar() {
               className="w-10 h-6 text-xs text-center border border-gray-200 rounded"
             />
           </label>
+          {(style.offsetX || style.offsetY) ? (
+            <>
+              <div className="w-px h-5 bg-gray-200 mx-0.5" />
+              <button onClick={() => update({ offsetX: 0, offsetY: 0 })} className="px-1.5 h-6 text-xs rounded text-gray-500 hover:bg-gray-100" title="位置をリセット">↩ リセット</button>
+            </>
+          ) : null}
         </>
       )}
     </div>

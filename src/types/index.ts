@@ -26,6 +26,8 @@ export interface ElementStyle {
   fontWeight?: "normal" | "bold";
   fontStyle?: "normal" | "italic";
   textAlign?: "left" | "center" | "right";
+  offsetX?: number;
+  offsetY?: number;
 }
 
 export interface SelectedElement {

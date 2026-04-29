@@ -24,7 +24,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Block, BlockType } from "@/types";
+import type { Block, BlockType, ElementStyle } from "@/types";
 import { GripVertical, Plus, ChevronUp, ChevronDown, Copy, Trash2 } from "lucide-react";
 
 // All available block types for the add-block popup
@@ -247,6 +247,7 @@ export function Canvas() {
   const setEditingElement = useEditorStore((s) => s.setEditingElement);
   const addBlock = useEditorStore((s) => s.addBlock);
   const reorderBlocks = useEditorStore((s) => s.reorderBlocks);
+  const updateElementStyle = useEditorStore((s) => s.updateElementStyle);
   const viewport = useEditorStore((s) => s.viewport);
 
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
@@ -358,6 +359,54 @@ export function Canvas() {
     }
   }, [setEditingElement, selectBlock]);
 
+  // Mousedown on an element body starts a move-drag (threshold 5px)
+  const handleElementMoveStart = useCallback((e: React.MouseEvent) => {
+    if (editingBlockId) return;
+    const elTarget = (e.target as HTMLElement).closest("[data-el-id]");
+    if (!elTarget) return;
+
+    const blockId = elTarget.getAttribute("data-el-block")!;
+    const elementId = elTarget.getAttribute("data-el-id")!;
+    const elementType = elTarget.getAttribute("data-el-type") as "text" | "image" | "shape";
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    let hasMoved = false;
+
+    const state = useEditorStore.getState();
+    const block = state.blocks.find(b => b.id === blockId);
+    const elStyles = (block?.content as { elementStyles?: Record<string, ElementStyle> } | undefined)?.elementStyles;
+    const initOffsetX = elStyles?.[elementId]?.offsetX ?? 0;
+    const initOffsetY = elStyles?.[elementId]?.offsetY ?? 0;
+
+    function onMouseMove(me: MouseEvent) {
+      const dx = me.clientX - startX;
+      const dy = me.clientY - startY;
+      if (!hasMoved && Math.hypot(dx, dy) < 5) return;
+      if (!hasMoved) {
+        hasMoved = true;
+        setSelectedElement({ blockId, elementId, elementType });
+        selectBlock(blockId);
+        document.body.style.userSelect = "none";
+        document.body.style.cursor = "move";
+      }
+      updateElementStyle(blockId, elementId, {
+        offsetX: Math.round(initOffsetX + dx),
+        offsetY: Math.round(initOffsetY + dy),
+      });
+    }
+
+    function onMouseUp() {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+    }
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  }, [editingBlockId, updateElementStyle, setSelectedElement, selectBlock]);
+
   const viewportWidth = {
     pc: "100%",
     tab: "768px",
@@ -385,6 +434,7 @@ export function Canvas() {
         className={`bg-white shadow-lg transition-all duration-300 ${isPaletteDragOver ? "ring-2 ring-blue-400 ring-offset-2" : ""}`}
         style={{ width: viewportWidth, maxWidth: "100%", minHeight: "600px" }}
         onDoubleClick={handleCanvasDoubleClick}
+        onMouseDown={handleElementMoveStart}
         onClick={(e) => {
           e.stopPropagation();
           const elTarget = (e.target as HTMLElement).closest("[data-el-id]");

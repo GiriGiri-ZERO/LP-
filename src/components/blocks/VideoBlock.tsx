@@ -1,6 +1,6 @@
 "use client";
 
-import type { Block, VideoContent } from "@/types";
+import type { VideoContent } from "@/types";
 
 interface Props {
   blockId: string;
@@ -24,6 +24,7 @@ export function VideoBlock({ blockId, content, selected }: Props) {
         height: content.height ? `${content.height}px` : "360px",
         opacity: content.opacity ?? 1,
         borderRadius: content.border_radius ? `${content.border_radius}px` : undefined,
+        transform: `translate(${content.elementStyles?.video?.offsetX ?? 0}px, ${content.elementStyles?.video?.offsetY ?? 0}px)`,
       }}
     >
       {isEmpty ? (

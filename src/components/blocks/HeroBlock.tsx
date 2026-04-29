@@ -53,6 +53,7 @@ export function HeroBlock({ blockId, content, selected, isEditing = false }: Pro
             fontWeight: content.elementStyles?.headline?.fontWeight ?? undefined,
             fontStyle: content.elementStyles?.headline?.fontStyle ?? undefined,
             textAlign: content.elementStyles?.headline?.textAlign ?? undefined,
+            transform: `translate(${content.elementStyles?.headline?.offsetX ?? 0}px, ${content.elementStyles?.headline?.offsetY ?? 0}px)`,
           }}
           data-el-block={blockId}
           data-el-id="headline"
@@ -69,6 +70,7 @@ export function HeroBlock({ blockId, content, selected, isEditing = false }: Pro
           style={{
             color: content.elementStyles?.subheadline?.color ?? undefined,
             fontSize: content.elementStyles?.subheadline?.fontSize ? `${content.elementStyles.subheadline.fontSize}px` : undefined,
+            transform: `translate(${content.elementStyles?.subheadline?.offsetX ?? 0}px, ${content.elementStyles?.subheadline?.offsetY ?? 0}px)`,
           }}
           data-el-block={blockId}
           data-el-id="subheadline"
@@ -86,6 +88,7 @@ export function HeroBlock({ blockId, content, selected, isEditing = false }: Pro
             backgroundColor: content.elementStyles?.cta_button?.backgroundColor ?? content.button_color ?? "#e94560",
             borderRadius: content.elementStyles?.cta_button?.borderRadius !== undefined ? `${content.elementStyles.cta_button.borderRadius}px` : undefined,
             borderColor: content.elementStyles?.cta_button?.borderColor ?? undefined,
+            transform: `translate(${content.elementStyles?.cta_button?.offsetX ?? 0}px, ${content.elementStyles?.cta_button?.offsetY ?? 0}px)`,
           }}
           data-el-block={blockId}
           data-el-id="cta_button"

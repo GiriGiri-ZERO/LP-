@@ -24,7 +24,7 @@ export function ImageBlock({ blockId, content, selected }: Props) {
           "w-full flex flex-col items-center justify-center gap-2 bg-gray-100 text-gray-400 border-2 border-dashed border-gray-300",
           selected && "ring-2 ring-blue-500"
         )}
-        style={{ height }}
+        style={{ height, transform: `translate(${content.elementStyles?.image?.offsetX ?? 0}px, ${content.elementStyles?.image?.offsetY ?? 0}px)` }}
       >
         <ImageIcon size={40} strokeWidth={1} />
         <span className="text-sm">左パネルの「画像」から写真を挿入</span>
@@ -38,7 +38,7 @@ export function ImageBlock({ blockId, content, selected }: Props) {
       data-el-id="image"
       data-el-type="image"
       className={cn("w-full overflow-hidden", selected && "ring-2 ring-blue-500")}
-      style={{ height, borderRadius: border_radius }}
+      style={{ height, borderRadius: border_radius, transform: `translate(${content.elementStyles?.image?.offsetX ?? 0}px, ${content.elementStyles?.image?.offsetY ?? 0}px)` }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
