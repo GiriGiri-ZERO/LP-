@@ -82,8 +82,9 @@ export function ResizeHandleOverlay() {
     }
 
     const initHeight: number = (content?.height as number | undefined) ?? 400;
-    const initShapeWidth: number = (content?.width as number | undefined) ?? 200;
-    const initShapeHeight: number = (content?.height as number | undefined) ?? 100;
+    // For shape OverlayElements, size lives in elementStyles; for ShapeBlock it's in content
+    const initShapeWidth: number = elStyles?.[elementId]?.width ?? (content?.width as number | undefined) ?? 200;
+    const initShapeHeight: number = elStyles?.[elementId]?.height ?? (content?.height as number | undefined) ?? 100;
     const isTopHandle = handleId[0] === "t";
     const isSideHandle = handleId[0] === "m";
 
@@ -105,15 +106,16 @@ export function ResizeHandleOverlay() {
         const isSideV = handleId === "tc" || handleId === "bc";
         const isLeft = handleId.includes("l");  // tl, bl, ml
         const isTop = handleId[0] === "t";      // tl, tc, tr
-        const patch: Record<string, number> = {};
-        if (!isSideV) {
-          patch.width = Math.max(20, initShapeWidth + (isLeft ? -dx : dx));
+        const newW = !isSideV ? Math.max(20, initShapeWidth + (isLeft ? -dx : dx)) : initShapeWidth;
+        const newH = !isSideHandle ? Math.max(4, initShapeHeight + (isTop ? -dy : dy)) : initShapeHeight;
+        // ShapeBlock uses elementId="shape" and stores size in block.content
+        // OverlayElement stores size in elementStyles
+        if (elementId === "shape") {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          updateBlock(blockId, { width: Math.round(newW), height: Math.round(newH) } as any);
+        } else {
+          updateElementStyle(blockId, elementId, { width: Math.round(newW), height: Math.round(newH) });
         }
-        if (!isSideHandle) {
-          patch.height = Math.max(4, initShapeHeight + (isTop ? -dy : dy));
-        }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        updateBlock(blockId, patch as any);
       }
 
       cancelAnimationFrame(rafRef.current);

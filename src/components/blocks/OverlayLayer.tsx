@@ -58,8 +58,8 @@ function OverlayElementView({ el, blockId }: { el: OverlayElement; blockId: stri
     const borderRadius = style.borderRadius ?? 8;
 
     let shapeStyle: React.CSSProperties = {
-      width: 120,
-      height: 80,
+      width: style.width ?? 120,
+      height: style.height ?? 80,
       backgroundColor: fillColor,
     };
 
@@ -74,7 +74,7 @@ function OverlayElementView({ el, blockId }: { el: OverlayElement; blockId: stri
         shapeStyle = { ...shapeStyle, clipPath: "polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%)", borderRadius: 0 };
         break;
       case "divider":
-        shapeStyle = { ...shapeStyle, height: 4, width: 200, borderRadius: 2 };
+        shapeStyle = { ...shapeStyle, height: style.height ?? 4, width: style.width ?? 200, borderRadius: 2 };
         break;
       default:
         shapeStyle = { ...shapeStyle, borderRadius };
