@@ -29,6 +29,8 @@ export interface ElementStyle {
   textAlign?: "left" | "center" | "right";
   offsetX?: number;
   offsetY?: number;
+  width?: number;
+  height?: number;
 }
 
 export interface SelectedElement {

@@ -57,7 +57,16 @@ export function CTABlock({ blockId, content, selected, isEditing }: Props) {
         <button
           {...editableProps}
           className={`inline-block px-10 py-4 rounded font-bold text-lg text-white ${editableProps.className}`}
-          style={{ backgroundColor: content.button_color ?? "#e94560" }}
+          style={{
+            backgroundColor: content.elementStyles?.["button"]?.backgroundColor ?? content.button_color ?? "#e94560",
+            borderRadius: content.elementStyles?.["button"]?.borderRadius !== undefined
+              ? `${content.elementStyles["button"].borderRadius}px` : undefined,
+            transform: (content.elementStyles?.["button"]?.offsetX || content.elementStyles?.["button"]?.offsetY)
+              ? `translate(${content.elementStyles["button"].offsetX ?? 0}px, ${content.elementStyles["button"].offsetY ?? 0}px)` : undefined,
+          }}
+          data-el-block={blockId}
+          data-el-id="button"
+          data-el-type="shape"
           onBlur={isEditing ? (e) => updateBlock(blockId, { button_text: e.currentTarget.textContent ?? "" }) : undefined}
         >
           {content.button_text}

@@ -369,6 +369,44 @@ export function Canvas() {
       // No blocks exist: fall through to create a new block
     }
 
+    // Shape palette drop → add as overlay element at cursor position
+    const shapeType = e.dataTransfer.getData("text/shape-type") as "rect" | "circle" | "triangle" | "arrow" | "divider" | "";
+    if (shapeType) {
+      const shapeBlockEls = canvasContentRef.current
+        ? Array.from(canvasContentRef.current.querySelectorAll("[data-block-id]"))
+        : [];
+      let shapeTargetEl: Element | null = null;
+      for (const el of shapeBlockEls) {
+        const r = el.getBoundingClientRect();
+        if (e.clientY >= r.top && e.clientY <= r.bottom) { shapeTargetEl = el; break; }
+      }
+      if (!shapeTargetEl && shapeBlockEls.length > 0) {
+        let minDist = Infinity;
+        for (const el of shapeBlockEls) {
+          const r = el.getBoundingClientRect();
+          const dist = Math.min(Math.abs(e.clientY - r.top), Math.abs(e.clientY - r.bottom));
+          if (dist < minDist) { minDist = dist; shapeTargetEl = el; }
+        }
+      }
+      if (shapeTargetEl) {
+        const blockId = shapeTargetEl.getAttribute("data-block-id")!;
+        const blockRect = shapeTargetEl.getBoundingClientRect();
+        const x = Math.max(0, Math.round(e.clientX - blockRect.left));
+        const y = Math.max(0, Math.round(e.clientY - blockRect.top));
+        const newEl: OverlayElement = { id: generateId(), type: "shape", shapeType };
+        addOverlayElement(blockId, newEl);
+        updateElementStyle(blockId, newEl.id, {
+          offsetX: x,
+          offsetY: y,
+          backgroundColor: "#e94560",
+          width: 100,
+          height: 60,
+        });
+        return;
+      }
+      // No blocks on canvas: fall through to create a new shape block below
+    }
+
     const afterIndex = getDropIndex(e.clientY);
     const insertArg = afterIndex - 1; // -1 means insert at beginning
 
@@ -399,7 +437,7 @@ export function Canvas() {
     const blockType = e.dataTransfer.getData("text/block-type") as BlockType;
     if (!blockType) return;
     if (blockType === "shape") {
-      const shapeType = e.dataTransfer.getData("text/shape-type") as "rect" | "circle" | "triangle" | "arrow" | "divider";
+      // Fallback: canvas was empty, create a new shape block
       addBlock("shape", insertArg, shapeType ? { shape_type: shapeType } : undefined);
       return;
     }

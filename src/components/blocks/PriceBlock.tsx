@@ -106,7 +106,16 @@ export function PriceBlock({ blockId, content, selected, isEditing }: Props) {
               <button
                 {...editableProps}
                 className={`w-full py-3 rounded font-bold text-white outline-none ${isEditing ? "ring-2 ring-blue-400 rounded" : ""}`}
-                style={{ backgroundColor: "#e94560" }}
+                style={{
+                  backgroundColor: content.elementStyles?.[`button[${i}]`]?.backgroundColor ?? "#e94560",
+                  borderRadius: content.elementStyles?.[`button[${i}]`]?.borderRadius !== undefined
+                    ? `${content.elementStyles[`button[${i}]`].borderRadius}px` : undefined,
+                  transform: (content.elementStyles?.[`button[${i}]`]?.offsetX || content.elementStyles?.[`button[${i}]`]?.offsetY)
+                    ? `translate(${content.elementStyles[`button[${i}]`].offsetX ?? 0}px, ${content.elementStyles[`button[${i}]`].offsetY ?? 0}px)` : undefined,
+                }}
+                data-el-block={blockId}
+                data-el-id={`button[${i}]`}
+                data-el-type="shape"
                 onBlur={isEditing ? (e) => {
                   const newItems = [...content.items];
                   newItems[i] = { ...plan, cta_text: e.currentTarget.textContent ?? "" };
