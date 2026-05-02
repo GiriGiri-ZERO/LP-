@@ -173,7 +173,7 @@ export function SubPanel({ category }: Props) {
                   </div>
                 )}
 
-                {selectedBlock.block_type === "hero" && (() => {
+                {!selectedElement && selectedBlock.block_type === "hero" && (() => {
                   const c = selectedBlock.content as HeroContent;
                   return (
                     <div className="space-y-3">
@@ -214,7 +214,7 @@ export function SubPanel({ category }: Props) {
                   );
                 })()}
 
-                {selectedBlock.block_type === "headline" && (() => {
+                {!selectedElement && selectedBlock.block_type === "headline" && (() => {
                   const c = selectedBlock.content as HeadlineContent;
                   return (
                     <div className="space-y-3">
@@ -252,7 +252,7 @@ export function SubPanel({ category }: Props) {
                   );
                 })()}
 
-                {selectedBlock.block_type === "cta" && (() => {
+                {!selectedElement && selectedBlock.block_type === "cta" && (() => {
                   const c = selectedBlock.content as CTAContent;
                   return (
                     <div className="space-y-3">
@@ -282,7 +282,7 @@ export function SubPanel({ category }: Props) {
                   );
                 })()}
 
-                {selectedBlock.block_type === "image" && (() => {
+                {!selectedElement && selectedBlock.block_type === "image" && (() => {
                   const c = selectedBlock.content as ImageContent;
                   return (
                     <div className="space-y-3">
@@ -337,7 +337,7 @@ export function SubPanel({ category }: Props) {
                   );
                 })()}
 
-                {selectedBlock.block_type === "video" && (() => {
+                {!selectedElement && selectedBlock.block_type === "video" && (() => {
                   const c = selectedBlock.content as VideoContent;
                   return (
                     <div className="space-y-3">
@@ -392,7 +392,7 @@ export function SubPanel({ category }: Props) {
                   );
                 })()}
 
-                {selectedBlock.block_type === "shape" && (() => {
+                {!selectedElement && selectedBlock.block_type === "shape" && (() => {
                   const c = selectedBlock.content as ShapeContent;
                   return (
                     <div className="space-y-3">
@@ -482,7 +482,7 @@ export function SubPanel({ category }: Props) {
                   );
                 })()}
 
-                {!["hero", "headline", "cta", "image", "video", "shape"].includes(selectedBlock.block_type) && (
+                {!selectedElement && !["hero", "headline", "cta", "image", "video", "shape"].includes(selectedBlock.block_type) && (
                   <p className="text-xs text-gray-500">このブロックにはスタイル設定がありません</p>
                 )}
 

@@ -82,6 +82,8 @@ export function ResizeHandleOverlay() {
     }
 
     const initHeight: number = (content?.height as number | undefined) ?? 400;
+    const initShapeWidth: number = (content?.width as number | undefined) ?? 200;
+    const initShapeHeight: number = (content?.height as number | undefined) ?? 100;
     const isTopHandle = handleId[0] === "t";
     const isSideHandle = handleId[0] === "m";
 
@@ -99,6 +101,19 @@ export function ResizeHandleOverlay() {
         const newH = Math.max(50, Math.min(1200, initHeight + delta));
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         updateBlock(blockId, { height: Math.round(newH) } as any);
+      } else if (elementType === "shape") {
+        const isSideV = handleId === "tc" || handleId === "bc";
+        const isLeft = handleId.includes("l");  // tl, bl, ml
+        const isTop = handleId[0] === "t";      // tl, tc, tr
+        const patch: Record<string, number> = {};
+        if (!isSideV) {
+          patch.width = Math.max(20, initShapeWidth + (isLeft ? -dx : dx));
+        }
+        if (!isSideHandle) {
+          patch.height = Math.max(4, initShapeHeight + (isTop ? -dy : dy));
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        updateBlock(blockId, patch as any);
       }
 
       cancelAnimationFrame(rafRef.current);

@@ -25,6 +25,16 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Block, BlockType, ElementStyle, OverlayElement } from "@/types";
+
+function getInitialTextColor(block: Block): string {
+  const c = block.content as Record<string, unknown>;
+  const bg = ((c.background_color ?? c.fill_color ?? "#ffffff") as string);
+  if (typeof bg !== "string" || !bg.startsWith("#") || bg.length < 7) return "#1a1a1a";
+  const r = parseInt(bg.slice(1, 3), 16);
+  const g = parseInt(bg.slice(3, 5), 16);
+  const b = parseInt(bg.slice(5, 7), 16);
+  return 0.299 * r + 0.587 * g + 0.114 * b < 128 ? "#ffffff" : "#1a1a1a";
+}
 import { generateId } from "@/lib/utils";
 import { GripVertical, Plus, ChevronUp, ChevronDown, Copy, Trash2 } from "lucide-react";
 
@@ -343,11 +353,14 @@ export function Canvas() {
           type: elementType === "headline" ? "text" : "text",
           text: elementType === "headline" ? "見出しテキスト" : "本文テキストをここに入力",
         };
+        const allBlocks = useEditorStore.getState().blocks;
+        const targetBlock = allBlocks.find((b) => b.id === blockId);
+        const initialColor = targetBlock ? getInitialTextColor(targetBlock) : "#1a1a1a";
         addOverlayElement(blockId, newEl);
         updateElementStyle(blockId, newEl.id, {
           offsetX: x,
           offsetY: y,
-          color: "#1a1a1a",
+          color: initialColor,
           fontSize: elementType === "headline" ? 24 : 16,
           fontWeight: elementType === "headline" ? "bold" : "normal",
         });
@@ -500,6 +513,14 @@ export function Canvas() {
         onMouseDown={handleElementMoveStart}
         onClick={(e) => {
           e.stopPropagation();
+          // Exit editing when clicking outside a contenteditable (covers the double-click → edit mode case)
+          if (editingBlockId) {
+            if ((e.target as HTMLElement).closest('[contenteditable="true"]')) return;
+            setEditingBlock(null);
+            setEditingElement(null);
+            setSelectedElement(null);
+            return;
+          }
           const elTarget = (e.target as HTMLElement).closest("[data-el-id]");
           if (elTarget) {
             const elementId = elTarget.getAttribute("data-el-id")!;
