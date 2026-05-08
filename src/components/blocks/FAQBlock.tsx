@@ -10,21 +10,34 @@ interface Props {
   isEditing: boolean;
 }
 
-export function FAQBlock({ blockId, content, selected, isEditing }: Props) {
+export function FAQBlock({ blockId, content, selected }: Props) {
   const updateBlock = useEditorStore((s) => s.updateBlock);
-  const setEditingBlock = useEditorStore((s) => s.setEditingBlock);
+  const editingElement = useEditorStore((s) => s.editingElement);
+  const setEditingElement = useEditorStore((s) => s.setEditingElement);
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Escape") setEditingBlock(null);
+  function isEditingEl(id: string) {
+    return editingElement?.blockId === blockId && editingElement?.elementId === id;
   }
 
-  const editableProps = isEditing
-    ? {
-        contentEditable: true as const,
-        suppressContentEditableWarning: true,
-        onKeyDown: handleKeyDown,
-      }
-    : { contentEditable: false as const };
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Escape") setEditingElement(null);
+    if (e.key === "Enter") (e.currentTarget as HTMLElement).blur();
+  }
+
+  function editableProps(elementId: string) {
+    const active = isEditingEl(elementId);
+    return active
+      ? {
+          contentEditable: true as const,
+          suppressContentEditableWarning: true,
+          onKeyDown: handleKeyDown,
+          className: "outline-none ring-2 ring-blue-400 rounded cursor-text select-text",
+        }
+      : {
+          contentEditable: false as const,
+          className: "outline-none cursor-default",
+        };
+  }
 
   return (
     <section className="relative px-8 py-16 bg-white">
@@ -37,22 +50,30 @@ export function FAQBlock({ blockId, content, selected, isEditing }: Props) {
           {content.items.map((item, i) => (
             <div key={i} className="border-b border-gray-200 pb-5">
               <h3
-                {...editableProps}
-                className={`text-lg font-bold text-red-500 mb-2 outline-none ${isEditing ? "ring-2 ring-blue-400 rounded" : ""}`}
-                onBlur={isEditing ? (e) => {
-                  const newItems = [...content.items];
-                  newItems[i] = { ...item, question: e.currentTarget.textContent ?? "" };
+                {...editableProps(`question[${i}]`)}
+                data-el-block={blockId}
+                data-el-id={`question[${i}]`}
+                data-el-type="text"
+                className={`text-lg font-bold text-red-500 mb-2 ${editableProps(`question[${i}]`).className}`}
+                onBlur={isEditingEl(`question[${i}]`) ? (e) => {
+                  const newItems = content.items.map((it, j) =>
+                    j === i ? { ...it, question: e.currentTarget.textContent ?? "" } : it
+                  );
                   updateBlock(blockId, { items: newItems });
                 } : undefined}
               >
                 Q. {item.question}
               </h3>
               <p
-                {...editableProps}
-                className={`text-gray-600 leading-relaxed outline-none ${isEditing ? "ring-2 ring-blue-400 rounded" : ""}`}
-                onBlur={isEditing ? (e) => {
-                  const newItems = [...content.items];
-                  newItems[i] = { ...item, answer: e.currentTarget.textContent ?? "" };
+                {...editableProps(`answer[${i}]`)}
+                data-el-block={blockId}
+                data-el-id={`answer[${i}]`}
+                data-el-type="text"
+                className={`text-gray-600 leading-relaxed ${editableProps(`answer[${i}]`).className}`}
+                onBlur={isEditingEl(`answer[${i}]`) ? (e) => {
+                  const newItems = content.items.map((it, j) =>
+                    j === i ? { ...it, answer: e.currentTarget.textContent ?? "" } : it
+                  );
                   updateBlock(blockId, { items: newItems });
                 } : undefined}
               >

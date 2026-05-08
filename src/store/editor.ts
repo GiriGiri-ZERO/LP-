@@ -58,6 +58,7 @@ interface EditorState {
 
   addOverlayElement: (blockId: string, el: OverlayElement) => void;
   removeOverlayElement: (blockId: string, elementId: string) => void;
+  updateOverlayElementText: (blockId: string, elementId: string, text: string) => void;
 
   updateTheme: (theme: Partial<Theme>) => void;
   setIsSaving: (v: boolean) => void;
@@ -264,6 +265,17 @@ export const useEditorStore = create<EditorState>()(
         block.overlayElements = block.overlayElements?.filter((el) => el.id !== elementId);
         block.updated_at = new Date().toISOString();
         state.isDirty = true;
+      }),
+
+    updateOverlayElementText: (blockId, elementId, text) =>
+      set((state) => {
+        const block = state.blocks.find((b) => b.id === blockId);
+        const el = block?.overlayElements?.find((el) => el.id === elementId);
+        if (el && block) {
+          el.text = text;
+          block.updated_at = new Date().toISOString();
+          state.isDirty = true;
+        }
       }),
 
     updateTheme: (theme) =>

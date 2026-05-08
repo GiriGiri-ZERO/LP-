@@ -461,10 +461,11 @@ export function Canvas() {
     if (elTarget) {
       const elementId = elTarget.getAttribute("data-el-id")!;
       const blockId = elTarget.getAttribute("data-el-block")!;
-      const isOverlay = useEditorStore.getState().blocks
+      const overlayEl = useEditorStore.getState().blocks
         .find((b) => b.id === blockId)
-        ?.overlayElements?.some((el) => el.id === elementId);
-      if (!isOverlay) {
+        ?.overlayElements?.find((el) => el.id === elementId);
+      // Allow editing for non-overlay elements AND overlay text elements (not shapes)
+      if (!overlayEl || overlayEl.type === "text") {
         setEditingElement({ blockId, elementId });
       }
       selectBlock(blockId);

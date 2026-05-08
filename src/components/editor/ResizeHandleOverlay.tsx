@@ -20,9 +20,10 @@ const HANDLES = [
 ];
 
 export function ResizeHandleOverlay() {
-  const { selectedElement, editingBlockId, updateElementStyle, updateBlock } = useEditorStore(
+  const { selectedElement, editingElement, editingBlockId, updateElementStyle, updateBlock } = useEditorStore(
     useShallow((s) => ({
       selectedElement: s.selectedElement,
+      editingElement: s.editingElement,
       editingBlockId: s.editingBlockId,
       updateElementStyle: s.updateElementStyle,
       updateBlock: s.updateBlock,
@@ -82,9 +83,10 @@ export function ResizeHandleOverlay() {
     }
 
     const initHeight: number = (content?.height as number | undefined) ?? 400;
-    // For shape OverlayElements, size lives in elementStyles; for ShapeBlock it's in content
     const initShapeWidth: number = elStyles?.[elementId]?.width ?? (content?.width as number | undefined) ?? 200;
     const initShapeHeight: number = elStyles?.[elementId]?.height ?? (content?.height as number | undefined) ?? 100;
+    const initOffsetX: number = elStyles?.[elementId]?.offsetX ?? 0;
+    const initOffsetY: number = elStyles?.[elementId]?.offsetY ?? 0;
     const isTopHandle = handleId[0] === "t";
     const isSideHandle = handleId[0] === "m";
 
@@ -104,17 +106,29 @@ export function ResizeHandleOverlay() {
         updateBlock(blockId, { height: Math.round(newH) } as any);
       } else if (elementType === "shape") {
         const isSideV = handleId === "tc" || handleId === "bc";
-        const isLeft = handleId.includes("l");  // tl, bl, ml
-        const isTop = handleId[0] === "t";      // tl, tc, tr
+        const isLeft = handleId.includes("l");
+        const isTop = handleId[0] === "t";
+        // Left handles: dragging left (dx<0) grows width; right handles: dragging right grows width
         const newW = !isSideV ? Math.max(20, initShapeWidth + (isLeft ? -dx : dx)) : initShapeWidth;
         const newH = !isSideHandle ? Math.max(4, initShapeHeight + (isTop ? -dy : dy)) : initShapeHeight;
-        // ShapeBlock uses elementId="shape" and stores size in block.content
-        // OverlayElement stores size in elementStyles
+
         if (elementId === "shape") {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           updateBlock(blockId, { width: Math.round(newW), height: Math.round(newH) } as any);
         } else {
-          updateElementStyle(blockId, elementId, { width: Math.round(newW), height: Math.round(newH) });
+          // OverlayElement: left/top handles must shift the element so the opposite edge stays fixed
+          const newOffsetX = isLeft
+            ? Math.round(initOffsetX + (initShapeWidth - newW))
+            : initOffsetX;
+          const newOffsetY = isTop
+            ? Math.round(initOffsetY + (initShapeHeight - newH))
+            : initOffsetY;
+          updateElementStyle(blockId, elementId, {
+            width: Math.round(newW),
+            height: Math.round(newH),
+            offsetX: newOffsetX,
+            offsetY: newOffsetY,
+          });
         }
       }
 
@@ -133,7 +147,9 @@ export function ResizeHandleOverlay() {
     document.addEventListener("mouseup", onMouseUp);
   }, [selectedElement, updateElementStyle, updateBlock, measureEl]);
 
-  if (!mounted || !selectedElement || editingBlockId || !rect) return null;
+  // Hide handles while an element is in text-editing mode (editingElement covers overlay text;
+  // editingBlockId covers block-level editing via setEditingBlock)
+  if (!mounted || !selectedElement || editingElement || editingBlockId || !rect) return null;
 
   return createPortal(
     <>

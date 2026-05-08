@@ -10,21 +10,34 @@ interface Props {
   isEditing: boolean;
 }
 
-export function FeatureBlock({ blockId, content, selected, isEditing }: Props) {
+export function FeatureBlock({ blockId, content, selected }: Props) {
   const updateBlock = useEditorStore((s) => s.updateBlock);
-  const setEditingBlock = useEditorStore((s) => s.setEditingBlock);
+  const editingElement = useEditorStore((s) => s.editingElement);
+  const setEditingElement = useEditorStore((s) => s.setEditingElement);
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Escape") setEditingBlock(null);
+  function isEditingEl(id: string) {
+    return editingElement?.blockId === blockId && editingElement?.elementId === id;
   }
 
-  const editableProps = isEditing
-    ? {
-        contentEditable: true as const,
-        suppressContentEditableWarning: true,
-        onKeyDown: handleKeyDown,
-      }
-    : { contentEditable: false as const };
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Escape") setEditingElement(null);
+    if (e.key === "Enter") (e.currentTarget as HTMLElement).blur();
+  }
+
+  function editableProps(elementId: string) {
+    const active = isEditingEl(elementId);
+    return active
+      ? {
+          contentEditable: true as const,
+          suppressContentEditableWarning: true,
+          onKeyDown: handleKeyDown,
+          className: "outline-none ring-2 ring-blue-400 rounded cursor-text select-text",
+        }
+      : {
+          contentEditable: false as const,
+          className: "outline-none cursor-default",
+        };
+  }
 
   return (
     <section className="relative px-8 py-16 bg-white">
@@ -34,9 +47,12 @@ export function FeatureBlock({ blockId, content, selected, isEditing }: Props) {
       <div className="max-w-5xl mx-auto">
         {content.headline && (
           <h2
-            {...editableProps}
-            className={`text-3xl font-bold text-center mb-12 outline-none ${isEditing ? "ring-2 ring-blue-400 rounded" : ""}`}
-            onBlur={isEditing ? (e) => updateBlock(blockId, { headline: e.currentTarget.textContent ?? "" }) : undefined}
+            {...editableProps("headline")}
+            data-el-block={blockId}
+            data-el-id="headline"
+            data-el-type="text"
+            className={`text-3xl font-bold text-center mb-12 ${editableProps("headline").className}`}
+            onBlur={isEditingEl("headline") ? (e) => updateBlock(blockId, { headline: e.currentTarget.textContent ?? "" }) : undefined}
           >
             {content.headline}
           </h2>
@@ -48,22 +64,30 @@ export function FeatureBlock({ blockId, content, selected, isEditing }: Props) {
                 <span className="text-4xl mb-4 block">{item.icon}</span>
               )}
               <h3
-                {...editableProps}
-                className={`text-xl font-bold mb-3 outline-none ${isEditing ? "ring-2 ring-blue-400 rounded" : ""}`}
-                onBlur={isEditing ? (e) => {
-                  const newItems = [...content.items];
-                  newItems[i] = { ...item, title: e.currentTarget.textContent ?? "" };
+                {...editableProps(`title[${i}]`)}
+                data-el-block={blockId}
+                data-el-id={`title[${i}]`}
+                data-el-type="text"
+                className={`text-xl font-bold mb-3 ${editableProps(`title[${i}]`).className}`}
+                onBlur={isEditingEl(`title[${i}]`) ? (e) => {
+                  const newItems = content.items.map((it, j) =>
+                    j === i ? { ...it, title: e.currentTarget.textContent ?? "" } : it
+                  );
                   updateBlock(blockId, { items: newItems });
                 } : undefined}
               >
                 {item.title}
               </h3>
               <p
-                {...editableProps}
-                className={`text-gray-600 leading-relaxed outline-none ${isEditing ? "ring-2 ring-blue-400 rounded" : ""}`}
-                onBlur={isEditing ? (e) => {
-                  const newItems = [...content.items];
-                  newItems[i] = { ...item, description: e.currentTarget.textContent ?? "" };
+                {...editableProps(`desc[${i}]`)}
+                data-el-block={blockId}
+                data-el-id={`desc[${i}]`}
+                data-el-type="text"
+                className={`text-gray-600 leading-relaxed ${editableProps(`desc[${i}]`).className}`}
+                onBlur={isEditingEl(`desc[${i}]`) ? (e) => {
+                  const newItems = content.items.map((it, j) =>
+                    j === i ? { ...it, description: e.currentTarget.textContent ?? "" } : it
+                  );
                   updateBlock(blockId, { items: newItems });
                 } : undefined}
               >

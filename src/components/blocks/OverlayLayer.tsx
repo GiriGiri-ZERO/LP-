@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect, useRef } from "react";
 import { useEditorStore } from "@/store/editor";
 import { useShallow } from "zustand/react/shallow";
 import type { Block, OverlayElement, ElementStyle } from "@/types";
@@ -29,16 +30,58 @@ function OverlayElementView({ el, blockId }: { el: OverlayElement; blockId: stri
     })
   );
 
+  const editingElement = useEditorStore((s) => s.editingElement);
+  const setEditingElement = useEditorStore((s) => s.setEditingElement);
+  const updateOverlayElementText = useEditorStore((s) => s.updateOverlayElementText);
+
+  const isEditing = editingElement?.blockId === blockId && editingElement?.elementId === el.id;
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isEditing && ref.current) {
+      ref.current.focus();
+      const sel = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(ref.current);
+      range.collapse(false);
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    }
+  }, [isEditing]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Escape") {
+      if (ref.current) ref.current.textContent = el.text ?? "テキスト";
+      ref.current?.blur();
+      e.preventDefault();
+    } else if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      ref.current?.blur();
+    }
+  }, [el.text]);
+
+  const handleBlur = useCallback((e: React.FocusEvent<HTMLDivElement>) => {
+    updateOverlayElementText(blockId, el.id, e.currentTarget.textContent ?? "");
+    setEditingElement(null);
+  }, [blockId, el.id, updateOverlayElementText, setEditingElement]);
+
   const offsetX = style.offsetX ?? 0;
   const offsetY = style.offsetY ?? 0;
 
   if (el.type === "text") {
     return (
       <div
+        ref={ref}
         data-el-block={blockId}
         data-el-id={el.id}
         data-el-type="text"
-        className="absolute top-0 left-0 pointer-events-auto select-none cursor-move whitespace-pre-wrap min-w-[2rem]"
+        className={`absolute top-0 left-0 pointer-events-auto whitespace-pre-wrap min-w-[2rem] outline-none ${
+          isEditing
+            ? "cursor-text select-text ring-2 ring-blue-400 rounded"
+            : "select-none cursor-move"
+        }`}
+        contentEditable={isEditing}
+        suppressContentEditableWarning
         style={{
           transform: `translate(${offsetX}px, ${offsetY}px)`,
           color: style.color ?? "#1a1a1a",
@@ -47,6 +90,8 @@ function OverlayElementView({ el, blockId }: { el: OverlayElement; blockId: stri
           fontStyle: style.fontStyle ?? "normal",
           textAlign: style.textAlign ?? "left",
         }}
+        onKeyDown={isEditing ? handleKeyDown : undefined}
+        onBlur={isEditing ? handleBlur : undefined}
       >
         {el.text ?? "テキスト"}
       </div>

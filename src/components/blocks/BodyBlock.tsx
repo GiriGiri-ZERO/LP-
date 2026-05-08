@@ -10,12 +10,15 @@ interface Props {
   isEditing: boolean;
 }
 
-export function BodyBlock({ blockId, content, selected, isEditing }: Props) {
+export function BodyBlock({ blockId, content, selected }: Props) {
   const updateBlock = useEditorStore((s) => s.updateBlock);
-  const setEditingBlock = useEditorStore((s) => s.setEditingBlock);
+  const editingElement = useEditorStore((s) => s.editingElement);
+  const setEditingElement = useEditorStore((s) => s.setEditingElement);
+
+  const isEditingBody = editingElement?.blockId === blockId && editingElement?.elementId === "body";
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Escape") setEditingBlock(null);
+    if (e.key === "Escape") setEditingElement(null);
   }
 
   return (
@@ -24,15 +27,18 @@ export function BodyBlock({ blockId, content, selected, isEditing }: Props) {
         <div className="absolute inset-0 ring-2 ring-blue-500 ring-inset pointer-events-none" />
       )}
       <div
-        className={`max-w-3xl mx-auto prose prose-lg outline-none ${isEditing ? "ring-2 ring-blue-400 rounded" : ""}`}
+        data-el-block={blockId}
+        data-el-id="body"
+        data-el-type="text"
+        className={`max-w-3xl mx-auto prose prose-lg outline-none ${isEditingBody ? "ring-2 ring-blue-400 rounded" : ""}`}
         style={{ textAlign: content.align ?? "left" }}
-        contentEditable={isEditing}
+        contentEditable={isEditingBody}
         suppressContentEditableWarning
-        // dangerouslySetInnerHTML is intentionally used here; content is produced
-        // by the app itself (AI or user inline edits), not arbitrary third-party HTML.
+        // dangerouslySetInnerHTML is used here because content.html is produced by the app
+        // itself (AI or user edits), not arbitrary third-party input.
         dangerouslySetInnerHTML={{ __html: content.html }}
-        onKeyDown={isEditing ? handleKeyDown : undefined}
-        onBlur={isEditing ? (e) => updateBlock(blockId, { html: e.currentTarget.innerHTML }) : undefined}
+        onKeyDown={isEditingBody ? handleKeyDown : undefined}
+        onBlur={isEditingBody ? (e) => updateBlock(blockId, { html: e.currentTarget.innerHTML }) : undefined}
       />
     </section>
   );
