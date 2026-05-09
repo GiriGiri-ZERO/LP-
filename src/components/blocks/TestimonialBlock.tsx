@@ -46,59 +46,64 @@ export function TestimonialBlock({ blockId, content, selected }: Props) {
       )}
       <div className="max-w-5xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {content.items.map((item, i) => (
-            <div key={i} className="bg-white rounded-xl p-6 shadow-sm">
-              <div className="flex mb-3">
-                {Array.from({ length: item.rating ?? 5 }).map((_, j) => (
-                  <span key={j} className="text-yellow-400 text-lg">★</span>
-                ))}
-              </div>
-              <blockquote
-                {...editableProps(`quote[${i}]`)}
-                data-el-block={blockId}
-                data-el-id={`quote[${i}]`}
-                data-el-type="text"
-                className={`text-gray-700 leading-relaxed mb-4 ${editableProps(`quote[${i}]`).className}`}
-                onBlur={isEditingEl(`quote[${i}]`) ? (e) => {
-                  const newItems = content.items.map((it, j) =>
-                    j === i ? { ...it, quote: e.currentTarget.textContent ?? "" } : it
-                  );
-                  updateBlock(blockId, { items: newItems });
-                } : undefined}
-              >
-                &ldquo;{item.quote}&rdquo;
-              </blockquote>
-              <div className="flex items-center gap-3">
-                {item.avatar_url && (
-                  <img
-                    src={item.avatar_url}
-                    alt={item.author}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                )}
-                <div>
-                  <p
-                    {...editableProps(`author[${i}]`)}
-                    data-el-block={blockId}
-                    data-el-id={`author[${i}]`}
-                    data-el-type="text"
-                    className={`font-bold ${editableProps(`author[${i}]`).className}`}
-                    onBlur={isEditingEl(`author[${i}]`) ? (e) => {
-                      const newItems = content.items.map((it, j) =>
-                        j === i ? { ...it, author: e.currentTarget.textContent ?? "" } : it
-                      );
-                      updateBlock(blockId, { items: newItems });
-                    } : undefined}
-                  >
-                    {item.author}
-                  </p>
-                  {item.role && (
-                    <p className="text-sm text-gray-500">{item.role}</p>
+          {content.items.map((item, i) => {
+            const quoteEp = editableProps(`quote[${i}]`);
+            const authorEp = editableProps(`author[${i}]`);
+            return (
+              <div key={i} className="bg-white rounded-xl p-6 shadow-sm">
+                <div className="flex mb-3">
+                  {Array.from({ length: item.rating ?? 5 }).map((_, j) => (
+                    <span key={j} className="text-yellow-400 text-lg">★</span>
+                  ))}
+                </div>
+                <blockquote
+                  {...quoteEp}
+                  data-el-block={blockId}
+                  data-el-id={`quote[${i}]`}
+                  data-el-type="text"
+                  className={`text-gray-700 leading-relaxed mb-4 ${quoteEp.className}`}
+                  onBlur={isEditingEl(`quote[${i}]`) ? (e) => {
+                    const raw = e.currentTarget.textContent ?? "";
+                    const newItems = content.items.map((it, j) =>
+                      j === i ? { ...it, quote: raw.replace(/^\u201C|\u201D$/g, "") } : it
+                    );
+                    updateBlock(blockId, { items: newItems });
+                  } : undefined}
+                >
+                  &ldquo;{item.quote}&rdquo;
+                </blockquote>
+                <div className="flex items-center gap-3">
+                  {item.avatar_url && (
+                    <img
+                      src={item.avatar_url}
+                      alt={item.author}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
                   )}
+                  <div>
+                    <p
+                      {...authorEp}
+                      data-el-block={blockId}
+                      data-el-id={`author[${i}]`}
+                      data-el-type="text"
+                      className={`font-bold ${authorEp.className}`}
+                      onBlur={isEditingEl(`author[${i}]`) ? (e) => {
+                        const newItems = content.items.map((it, j) =>
+                          j === i ? { ...it, author: e.currentTarget.textContent ?? "" } : it
+                        );
+                        updateBlock(blockId, { items: newItems });
+                      } : undefined}
+                    >
+                      {item.author}
+                    </p>
+                    {item.role && (
+                      <p className="text-sm text-gray-500">{item.role}</p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

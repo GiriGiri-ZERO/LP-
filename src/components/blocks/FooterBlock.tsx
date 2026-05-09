@@ -47,18 +47,21 @@ export function FooterBlock({ blockId, content, selected }: Props) {
       {selected && (
         <div className="absolute inset-0 ring-2 ring-blue-500 ring-inset pointer-events-none" />
       )}
-      {content.company_name && (
-        <div
-          {...editableProps("company")}
-          data-el-block={blockId}
-          data-el-id="company"
-          data-el-type="text"
-          className={`font-bold text-lg mb-2 ${editableProps("company").className}`}
-          onBlur={isEditingEl("company") ? (e) => updateBlock(blockId, { company_name: e.currentTarget.textContent ?? "" }) : undefined}
-        >
-          {content.company_name}
-        </div>
-      )}
+      {content.company_name && (() => {
+        const companyEp = editableProps("company");
+        return (
+          <div
+            {...companyEp}
+            data-el-block={blockId}
+            data-el-id="company"
+            data-el-type="text"
+            className={`font-bold text-lg mb-2 ${companyEp.className}`}
+            onBlur={isEditingEl("company") ? (e) => updateBlock(blockId, { company_name: e.currentTarget.textContent ?? "" }) : undefined}
+          >
+            {content.company_name}
+          </div>
+        );
+      })()}
       {content.links && content.links.length > 0 && (
         <div className="mb-3 space-x-4">
           {content.links.map((l, i) => (
@@ -68,18 +71,21 @@ export function FooterBlock({ blockId, content, selected }: Props) {
           ))}
         </div>
       )}
-      {content.copyright && (
-        <p
-          {...editableProps("copyright")}
-          data-el-block={blockId}
-          data-el-id="copyright"
-          data-el-type="text"
-          className={`text-gray-500 text-sm ${editableProps("copyright").className}`}
-          onBlur={isEditingEl("copyright") ? (e) => updateBlock(blockId, { copyright: e.currentTarget.textContent ?? "" }) : undefined}
-        >
-          {content.copyright}
-        </p>
-      )}
+      {content.copyright && (() => {
+        const copyrightEp = editableProps("copyright");
+        return (
+          <p
+            {...copyrightEp}
+            data-el-block={blockId}
+            data-el-id="copyright"
+            data-el-type="text"
+            className={`text-gray-500 text-sm ${copyrightEp.className}`}
+            onBlur={isEditingEl("copyright") ? (e) => updateBlock(blockId, { copyright: e.currentTarget.textContent ?? "" }) : undefined}
+          >
+            {content.copyright}
+          </p>
+        );
+      })()}
     </footer>
   );
 }

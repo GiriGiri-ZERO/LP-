@@ -45,56 +45,63 @@ export function FeatureBlock({ blockId, content, selected }: Props) {
         <div className="absolute inset-0 ring-2 ring-blue-500 ring-inset pointer-events-none" />
       )}
       <div className="max-w-5xl mx-auto">
-        {content.headline && (
-          <h2
-            {...editableProps("headline")}
-            data-el-block={blockId}
-            data-el-id="headline"
-            data-el-type="text"
-            className={`text-3xl font-bold text-center mb-12 ${editableProps("headline").className}`}
-            onBlur={isEditingEl("headline") ? (e) => updateBlock(blockId, { headline: e.currentTarget.textContent ?? "" }) : undefined}
-          >
-            {content.headline}
-          </h2>
-        )}
+        {content.headline && (() => {
+          const hlEp = editableProps("headline");
+          return (
+            <h2
+              {...hlEp}
+              data-el-block={blockId}
+              data-el-id="headline"
+              data-el-type="text"
+              className={`text-3xl font-bold text-center mb-12 ${hlEp.className}`}
+              onBlur={isEditingEl("headline") ? (e) => updateBlock(blockId, { headline: e.currentTarget.textContent ?? "" }) : undefined}
+            >
+              {content.headline}
+            </h2>
+          );
+        })()}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {content.items.map((item, i) => (
-            <div key={i} className="text-center p-6">
-              {item.icon && (
-                <span className="text-4xl mb-4 block">{item.icon}</span>
-              )}
-              <h3
-                {...editableProps(`title[${i}]`)}
-                data-el-block={blockId}
-                data-el-id={`title[${i}]`}
-                data-el-type="text"
-                className={`text-xl font-bold mb-3 ${editableProps(`title[${i}]`).className}`}
-                onBlur={isEditingEl(`title[${i}]`) ? (e) => {
-                  const newItems = content.items.map((it, j) =>
-                    j === i ? { ...it, title: e.currentTarget.textContent ?? "" } : it
-                  );
-                  updateBlock(blockId, { items: newItems });
-                } : undefined}
-              >
-                {item.title}
-              </h3>
-              <p
-                {...editableProps(`desc[${i}]`)}
-                data-el-block={blockId}
-                data-el-id={`desc[${i}]`}
-                data-el-type="text"
-                className={`text-gray-600 leading-relaxed ${editableProps(`desc[${i}]`).className}`}
-                onBlur={isEditingEl(`desc[${i}]`) ? (e) => {
-                  const newItems = content.items.map((it, j) =>
-                    j === i ? { ...it, description: e.currentTarget.textContent ?? "" } : it
-                  );
-                  updateBlock(blockId, { items: newItems });
-                } : undefined}
-              >
-                {item.description}
-              </p>
-            </div>
-          ))}
+          {content.items.map((item, i) => {
+            const titleEp = editableProps(`title[${i}]`);
+            const descEp = editableProps(`desc[${i}]`);
+            return (
+              <div key={i} className="text-center p-6">
+                {item.icon && (
+                  <span className="text-4xl mb-4 block">{item.icon}</span>
+                )}
+                <h3
+                  {...titleEp}
+                  data-el-block={blockId}
+                  data-el-id={`title[${i}]`}
+                  data-el-type="text"
+                  className={`text-xl font-bold mb-3 ${titleEp.className}`}
+                  onBlur={isEditingEl(`title[${i}]`) ? (e) => {
+                    const newItems = content.items.map((it, j) =>
+                      j === i ? { ...it, title: e.currentTarget.textContent ?? "" } : it
+                    );
+                    updateBlock(blockId, { items: newItems });
+                  } : undefined}
+                >
+                  {item.title}
+                </h3>
+                <p
+                  {...descEp}
+                  data-el-block={blockId}
+                  data-el-id={`desc[${i}]`}
+                  data-el-type="text"
+                  className={`text-gray-600 leading-relaxed ${descEp.className}`}
+                  onBlur={isEditingEl(`desc[${i}]`) ? (e) => {
+                    const newItems = content.items.map((it, j) =>
+                      j === i ? { ...it, description: e.currentTarget.textContent ?? "" } : it
+                    );
+                    updateBlock(blockId, { items: newItems });
+                  } : undefined}
+                >
+                  {item.description}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
