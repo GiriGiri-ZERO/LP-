@@ -26,6 +26,7 @@ export interface ElementStyle {
   fontSize?: number;
   fontWeight?: "normal" | "bold";
   fontStyle?: "normal" | "italic";
+  textDecoration?: "none" | "underline" | "line-through";
   textAlign?: "left" | "center" | "right";
   offsetX?: number;
   offsetY?: number;
@@ -63,11 +64,17 @@ export interface ProductContext {
   tone: Tone;
 }
 
+export type ShapeType =
+  | "rect" | "circle" | "triangle" | "arrow" | "divider"
+  | "star" | "diamond" | "hexagon" | "pentagon"
+  | "cross" | "speech-bubble" | "heart" | "chevron";
+
 export interface OverlayElement {
   id: string;
   type: "text" | "shape";
   text?: string;
-  shapeType?: "rect" | "circle" | "triangle" | "arrow" | "divider";
+  shapeType?: ShapeType;
+  zIndex?: number;
 }
 
 export interface Block {
@@ -211,7 +218,7 @@ export interface VideoContent {
 }
 
 export interface ShapeContent {
-  shape_type: "rect" | "circle" | "triangle" | "arrow" | "divider";
+  shape_type: ShapeType;
   fill_color: string;
   border_color?: string;
   border_width?: number;

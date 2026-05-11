@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useEditorStore } from "@/store/editor";
 import { useShallow } from "zustand/react/shallow";
-import type { Block, OverlayElement, ElementStyle } from "@/types";
+import type { Block, OverlayElement, ElementStyle, ShapeType } from "@/types";
 import type React from "react";
 
 interface Props {
@@ -14,14 +14,14 @@ export function OverlayLayer({ block }: Props) {
   if (!block.overlayElements?.length) return null;
   return (
     <div className="absolute inset-0 pointer-events-none z-10 overflow-visible">
-      {block.overlayElements.map((el) => (
-        <OverlayElementView key={el.id} el={el} blockId={block.id} />
+      {block.overlayElements.map((el, index) => (
+        <OverlayElementView key={el.id} el={el} blockId={block.id} index={index} />
       ))}
     </div>
   );
 }
 
-function OverlayElementView({ el, blockId }: { el: OverlayElement; blockId: string }) {
+function OverlayElementView({ el, blockId, index }: { el: OverlayElement; blockId: string; index: number }) {
   const style = useEditorStore(
     useShallow((s) => {
       const block = s.blocks.find((b) => b.id === blockId);
@@ -88,7 +88,9 @@ function OverlayElementView({ el, blockId }: { el: OverlayElement; blockId: stri
           fontSize: style.fontSize ?? 16,
           fontWeight: style.fontWeight ?? "normal",
           fontStyle: style.fontStyle ?? "normal",
-          textAlign: style.textAlign ?? "left",
+          textDecoration: style.textDecoration ?? "none",
+          textAlign: (style.textAlign ?? "left") as React.CSSProperties["textAlign"],
+          zIndex: el.zIndex ?? index,
         }}
         onKeyDown={isEditing ? handleKeyDown : undefined}
         onBlur={isEditing ? handleBlur : undefined}
@@ -108,21 +110,30 @@ function OverlayElementView({ el, blockId }: { el: OverlayElement; blockId: stri
       backgroundColor: fillColor,
     };
 
-    switch (el.shapeType) {
-      case "circle":
-        shapeStyle = { ...shapeStyle, borderRadius: "50%" };
-        break;
-      case "triangle":
-        shapeStyle = { ...shapeStyle, clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)", borderRadius: 0 };
-        break;
-      case "arrow":
-        shapeStyle = { ...shapeStyle, clipPath: "polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%)", borderRadius: 0 };
-        break;
-      case "divider":
-        shapeStyle = { ...shapeStyle, height: style.height ?? 4, width: style.width ?? 200, borderRadius: 2 };
-        break;
-      default:
-        shapeStyle = { ...shapeStyle, borderRadius };
+    const clipShapes: Partial<Record<ShapeType, string>> = {
+      triangle: "polygon(50% 0%, 0% 100%, 100% 100%)",
+      arrow: "polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%)",
+      star: "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)",
+      diamond: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
+      hexagon: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)",
+      pentagon: "polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)",
+      cross: "polygon(35% 0%, 65% 0%, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 65% 100%, 35% 100%, 35% 65%, 0% 65%, 0% 35%, 35% 35%)",
+      heart: "polygon(10% 25%, 10% 45%, 50% 90%, 90% 45%, 90% 25%, 70% 5%, 50% 20%, 30% 5%)",
+      chevron: "polygon(0% 0%, 75% 0%, 100% 50%, 75% 100%, 0% 100%, 25% 50%)",
+    };
+
+    const clipPath = el.shapeType ? clipShapes[el.shapeType] : undefined;
+
+    if (el.shapeType === "circle") {
+      shapeStyle = { ...shapeStyle, borderRadius: "50%" };
+    } else if (el.shapeType === "divider") {
+      shapeStyle = { ...shapeStyle, height: style.height ?? 4, width: style.width ?? 200, borderRadius: 2 };
+    } else if (el.shapeType === "speech-bubble") {
+      shapeStyle = { ...shapeStyle, borderRadius: 8 };
+    } else if (clipPath) {
+      shapeStyle = { ...shapeStyle, clipPath, borderRadius: 0 };
+    } else {
+      shapeStyle = { ...shapeStyle, borderRadius };
     }
 
     return (
@@ -131,7 +142,7 @@ function OverlayElementView({ el, blockId }: { el: OverlayElement; blockId: stri
         data-el-id={el.id}
         data-el-type="shape"
         className="absolute top-0 left-0 pointer-events-auto cursor-move"
-        style={{ ...shapeStyle, transform: `translate(${offsetX}px, ${offsetY}px)` }}
+        style={{ ...shapeStyle, transform: `translate(${offsetX}px, ${offsetY}px)`, zIndex: el.zIndex ?? index }}
       />
     );
   }

@@ -25,6 +25,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Block, BlockType, ElementStyle, OverlayElement } from "@/types";
+import { SnapGuideOverlay } from "@/components/editor/SnapGuideOverlay";
+import { computeSnap } from "@/lib/snap";
 
 function getInitialTextColor(block: Block): string {
   const c = block.content as Record<string, unknown>;
@@ -261,6 +263,7 @@ export function Canvas() {
   const updateElementStyle = useEditorStore((s) => s.updateElementStyle);
   const addOverlayElement = useEditorStore((s) => s.addOverlayElement);
   const setIsDraggingElement = useEditorStore((s) => s.setIsDraggingElement);
+  const setSnapGuides = useEditorStore((s) => s.setSnapGuides);
   const viewport = useEditorStore((s) => s.viewport);
 
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
@@ -504,9 +507,27 @@ export function Canvas() {
         document.body.style.userSelect = "none";
         document.body.style.cursor = "move";
       }
+      const rawOffsetX = initOffsetX + dx;
+      const rawOffsetY = initOffsetY + dy;
+
+      const storeState = useEditorStore.getState();
+      const block = storeState.blocks.find((b) => b.id === blockId);
+      const overlayEls = block?.overlayElements ?? [];
+      const elStylesMap = (block?.content as { elementStyles?: Record<string, ElementStyle> } | undefined)?.elementStyles ?? {};
+
+      const canvasWidth = canvasContentRef.current?.offsetWidth ?? 800;
+      const allRects = overlayEls.map((oel) => {
+        const s = elStylesMap[oel.id] ?? {};
+        return { id: oel.id, offsetX: s.offsetX ?? 0, offsetY: s.offsetY ?? 0, width: s.width ?? 120, height: s.height ?? 40 };
+      });
+      const currentStyle = elStylesMap[elementId] ?? {};
+      const movingRect = { offsetX: rawOffsetX, offsetY: rawOffsetY, width: currentStyle.width ?? 120, height: currentStyle.height ?? 40 };
+
+      const { snappedOffsetX, snappedOffsetY, guideX, guideY } = computeSnap(allRects, elementId, movingRect, canvasWidth);
+      setSnapGuides({ x: guideX, y: guideY });
       updateElementStyle(blockId, elementId, {
-        offsetX: Math.round(initOffsetX + dx),
-        offsetY: Math.round(initOffsetY + dy),
+        offsetX: Math.round(snappedOffsetX),
+        offsetY: Math.round(snappedOffsetY),
       });
     }
 
@@ -514,13 +535,14 @@ export function Canvas() {
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
       setIsDraggingElement(false);
+      setSnapGuides({});
       document.body.style.userSelect = "";
       document.body.style.cursor = "";
     }
 
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
-  }, [editingBlockId, updateElementStyle, setSelectedElement, selectBlock, setIsDraggingElement]);
+  }, [editingBlockId, updateElementStyle, setSelectedElement, selectBlock, setIsDraggingElement, setSnapGuides]);
 
   const viewportWidth = {
     pc: "100%",
@@ -655,6 +677,7 @@ export function Canvas() {
     </div>
     <FloatingElementToolbar />
     <ResizeHandleOverlay />
+    <SnapGuideOverlay />
     </>
   );
 }

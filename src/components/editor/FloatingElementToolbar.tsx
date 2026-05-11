@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useEditorStore } from "@/store/editor";
 import { useShallow } from "zustand/react/shallow";
-import { AlignLeft, AlignCenter, AlignRight, Trash2 } from "lucide-react";
+import { AlignLeft, AlignCenter, AlignRight, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import type { ElementStyle } from "@/types";
 
 const TOOLBAR_HEIGHT = 40;
 const GAP = 8;
 
 export function FloatingElementToolbar() {
-  const { selectedElement, updateElementStyle, removeOverlayElement, setSelectedElement, editingBlockId, isDraggingElement } = useEditorStore(
+  const { selectedElement, updateElementStyle, removeOverlayElement, setSelectedElement, editingBlockId, isDraggingElement, bringForward, sendBackward } = useEditorStore(
     useShallow((s) => ({
       selectedElement: s.selectedElement,
       updateElementStyle: s.updateElementStyle,
@@ -19,6 +19,8 @@ export function FloatingElementToolbar() {
       setSelectedElement: s.setSelectedElement,
       editingBlockId: s.editingBlockId,
       isDraggingElement: s.isDraggingElement,
+      bringForward: s.bringForward,
+      sendBackward: s.sendBackward,
     }))
   );
 
@@ -111,6 +113,11 @@ export function FloatingElementToolbar() {
             className={`w-6 h-6 text-xs italic rounded flex items-center justify-center transition-colors ${style.fontStyle === "italic" ? "bg-gray-200" : "hover:bg-gray-100"}`}
             title="斜体"
           >I</button>
+          <button
+            onClick={() => update({ textDecoration: style.textDecoration === "underline" ? "none" : "underline" })}
+            className={`w-6 h-6 text-xs underline rounded flex items-center justify-center transition-colors ${style.textDecoration === "underline" ? "bg-gray-200" : "hover:bg-gray-100"}`}
+            title="下線"
+          >U</button>
           <div className="w-px h-5 bg-gray-200 mx-0.5" />
           <button onClick={() => update({ textAlign: "left" })} className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${style.textAlign === "left" ? "bg-gray-200" : "hover:bg-gray-100"}`} title="左揃え"><AlignLeft size={12} /></button>
           <button onClick={() => update({ textAlign: "center" })} className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${style.textAlign === "center" ? "bg-gray-200" : "hover:bg-gray-100"}`} title="中央揃え"><AlignCenter size={12} /></button>
@@ -165,6 +172,21 @@ export function FloatingElementToolbar() {
       )}
       {isOverlay && (
         <>
+          <div className="w-px h-5 bg-gray-200 mx-0.5" />
+          <button
+            onClick={() => bringForward(selectedElement!.blockId, selectedElement!.elementId)}
+            className="w-6 h-6 rounded flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
+            title="前面へ"
+          >
+            <ArrowUp size={12} />
+          </button>
+          <button
+            onClick={() => sendBackward(selectedElement!.blockId, selectedElement!.elementId)}
+            className="w-6 h-6 rounded flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
+            title="背面へ"
+          >
+            <ArrowDown size={12} />
+          </button>
           <div className="w-px h-5 bg-gray-200 mx-0.5" />
           <button
             onClick={handleDelete}

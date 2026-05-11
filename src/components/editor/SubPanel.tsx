@@ -580,21 +580,57 @@ const SHAPE_ITEMS: { type: ShapeContent["shape_type"]; label: string; preview: R
   {
     type: "triangle",
     label: "三角形",
-    preview: (
-      <div style={{ width: 36, height: 30, backgroundColor: "#e94560", clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }} />
-    ),
+    preview: <div style={{ width: 36, height: 30, backgroundColor: "#e94560", clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }} />,
   },
   {
     type: "arrow",
     label: "矢印",
-    preview: (
-      <div style={{ width: 40, height: 24, backgroundColor: "#e94560", clipPath: "polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%)" }} />
-    ),
+    preview: <div style={{ width: 40, height: 24, backgroundColor: "#e94560", clipPath: "polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%)" }} />,
   },
   {
     type: "divider",
     label: "区切り線",
     preview: <div style={{ width: 44, height: 4, backgroundColor: "#e94560", borderRadius: 2 }} />,
+  },
+  {
+    type: "star",
+    label: "星形",
+    preview: <div style={{ width: 28, height: 28, backgroundColor: "#e94560", clipPath: "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)" }} />,
+  },
+  {
+    type: "diamond",
+    label: "ひし形",
+    preview: <div style={{ width: 28, height: 28, backgroundColor: "#e94560", clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }} />,
+  },
+  {
+    type: "hexagon",
+    label: "六角形",
+    preview: <div style={{ width: 32, height: 28, backgroundColor: "#e94560", clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)" }} />,
+  },
+  {
+    type: "pentagon",
+    label: "五角形",
+    preview: <div style={{ width: 28, height: 28, backgroundColor: "#e94560", clipPath: "polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)" }} />,
+  },
+  {
+    type: "cross",
+    label: "十字",
+    preview: <div style={{ width: 28, height: 28, backgroundColor: "#e94560", clipPath: "polygon(35% 0%, 65% 0%, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 65% 100%, 35% 100%, 35% 65%, 0% 65%, 0% 35%, 35% 35%)" }} />,
+  },
+  {
+    type: "speech-bubble",
+    label: "吹き出し",
+    preview: <div style={{ width: 32, height: 24, backgroundColor: "#e94560", borderRadius: 6 }} />,
+  },
+  {
+    type: "heart",
+    label: "ハート",
+    preview: <div style={{ width: 28, height: 28, backgroundColor: "#e94560", clipPath: "polygon(10% 25%, 10% 45%, 50% 90%, 90% 45%, 90% 25%, 70% 5%, 50% 20%, 30% 5%)" }} />,
+  },
+  {
+    type: "chevron",
+    label: "シェブロン",
+    preview: <div style={{ width: 32, height: 24, backgroundColor: "#e94560", clipPath: "polygon(0% 0%, 75% 0%, 100% 50%, 75% 100%, 0% 100%, 25% 50%)" }} />,
   },
 ];
 
@@ -604,7 +640,7 @@ function ShapePalette({ addBlock }: { addBlock: AddBlockFn }) {
       <div className="flex items-center gap-2 mb-3">
         <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">図形</span>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-3 gap-2">
         {SHAPE_ITEMS.map((item) => (
           <button
             key={item.type}
@@ -615,11 +651,11 @@ function ShapePalette({ addBlock }: { addBlock: AddBlockFn }) {
               e.dataTransfer.setData("text/shape-type", item.type);
               e.dataTransfer.effectAllowed = "copy";
             }}
-            className="flex flex-col items-center justify-center gap-1.5 h-16 rounded-lg border border-gray-600 hover:border-blue-400 hover:bg-gray-700 transition-colors cursor-grab active:cursor-grabbing"
+            className="flex flex-col items-center justify-center gap-1 h-14 rounded-lg border border-gray-600 hover:border-blue-400 hover:bg-gray-700 transition-colors cursor-grab active:cursor-grabbing"
             title={item.label}
           >
             {item.preview}
-            <span className="text-xs text-gray-400">{item.label}</span>
+            <span className="text-[10px] text-gray-400 leading-tight">{item.label}</span>
           </button>
         ))}
       </div>

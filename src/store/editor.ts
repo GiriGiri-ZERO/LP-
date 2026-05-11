@@ -59,6 +59,13 @@ interface EditorState {
   addOverlayElement: (blockId: string, el: OverlayElement) => void;
   removeOverlayElement: (blockId: string, elementId: string) => void;
   updateOverlayElementText: (blockId: string, elementId: string, text: string) => void;
+  bringForward: (blockId: string, elementId: string) => void;
+  sendBackward: (blockId: string, elementId: string) => void;
+  bringToFront: (blockId: string, elementId: string) => void;
+  sendToBack: (blockId: string, elementId: string) => void;
+
+  snapGuides: { x?: number; y?: number };
+  setSnapGuides: (guides: { x?: number; y?: number }) => void;
 
   updateTheme: (theme: Partial<Theme>) => void;
   setIsSaving: (v: boolean) => void;
@@ -79,6 +86,7 @@ export const useEditorStore = create<EditorState>()(
     activeTab: "preview",
     viewport: "pc",
     isDirty: false,
+    snapGuides: {},
     isSaving: false,
     isGenerating: false,
     generatingBlockType: null,
@@ -277,6 +285,38 @@ export const useEditorStore = create<EditorState>()(
           state.isDirty = true;
         }
       }),
+
+    bringForward: (blockId, elementId) =>
+      set((state) => {
+        const block = state.blocks.find((b) => b.id === blockId);
+        const el = block?.overlayElements?.find((e) => e.id === elementId);
+        if (el) { el.zIndex = (el.zIndex ?? 0) + 1; state.isDirty = true; }
+      }),
+
+    sendBackward: (blockId, elementId) =>
+      set((state) => {
+        const block = state.blocks.find((b) => b.id === blockId);
+        const el = block?.overlayElements?.find((e) => e.id === elementId);
+        if (el) { el.zIndex = Math.max(0, (el.zIndex ?? 0) - 1); state.isDirty = true; }
+      }),
+
+    bringToFront: (blockId, elementId) =>
+      set((state) => {
+        const block = state.blocks.find((b) => b.id === blockId);
+        if (!block?.overlayElements) return;
+        const maxZ = Math.max(0, ...block.overlayElements.map((e) => e.zIndex ?? 0));
+        const el = block.overlayElements.find((e) => e.id === elementId);
+        if (el) { el.zIndex = maxZ + 1; state.isDirty = true; }
+      }),
+
+    sendToBack: (blockId, elementId) =>
+      set((state) => {
+        const block = state.blocks.find((b) => b.id === blockId);
+        const el = block?.overlayElements?.find((e) => e.id === elementId);
+        if (el) { el.zIndex = 0; state.isDirty = true; }
+      }),
+
+    setSnapGuides: (guides) => set({ snapGuides: guides }),
 
     updateTheme: (theme) =>
       set((state) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ShapeContent } from "@/types";
+import type { ShapeContent, ShapeType } from "@/types";
 import type React from "react";
 
 interface Props {
@@ -41,6 +41,22 @@ function getShapeStyle(content: ShapeContent): React.CSSProperties {
       return { ...base, clipPath: "polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%)", borderRadius: 0 };
     case "divider":
       return { ...base, width: "100%", height: height ?? 4, borderRadius: border_radius };
+    case "star":
+      return { ...base, clipPath: "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)", borderRadius: 0 };
+    case "diamond":
+      return { ...base, clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)", borderRadius: 0 };
+    case "hexagon":
+      return { ...base, clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)", borderRadius: 0 };
+    case "pentagon":
+      return { ...base, clipPath: "polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)", borderRadius: 0 };
+    case "cross":
+      return { ...base, clipPath: "polygon(35% 0%, 65% 0%, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 65% 100%, 35% 100%, 35% 65%, 0% 65%, 0% 35%, 35% 35%)", borderRadius: 0 };
+    case "heart":
+      return { ...base, clipPath: "polygon(10% 25%, 10% 45%, 50% 90%, 90% 45%, 90% 25%, 70% 5%, 50% 20%, 30% 5%)", borderRadius: 0 };
+    case "chevron":
+      return { ...base, clipPath: "polygon(0% 0%, 75% 0%, 100% 50%, 75% 100%, 0% 100%, 25% 50%)", borderRadius: 0 };
+    case "speech-bubble":
+      return { ...base, borderRadius: 8 };
     default:
       return { ...base, borderRadius: border_radius };
   }
