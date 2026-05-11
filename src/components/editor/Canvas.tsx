@@ -24,7 +24,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Block, BlockType, ElementStyle, OverlayElement } from "@/types";
+import type { Block, BlockType, ElementStyle, OverlayElement, ShapeType } from "@/types";
 import { SnapGuideOverlay } from "@/components/editor/SnapGuideOverlay";
 import { computeSnap } from "@/lib/snap";
 
@@ -373,7 +373,7 @@ export function Canvas() {
     }
 
     // Shape palette drop → add as overlay element at cursor position
-    const shapeType = e.dataTransfer.getData("text/shape-type") as "rect" | "circle" | "triangle" | "arrow" | "divider" | "";
+    const shapeType = e.dataTransfer.getData("text/shape-type") as ShapeType | "";
     if (shapeType) {
       const shapeBlockEls = canvasContentRef.current
         ? Array.from(canvasContentRef.current.querySelectorAll("[data-block-id]"))
@@ -524,7 +524,11 @@ export function Canvas() {
       const movingRect = { offsetX: rawOffsetX, offsetY: rawOffsetY, width: currentStyle.width ?? 120, height: currentStyle.height ?? 40 };
 
       const { snappedOffsetX, snappedOffsetY, guideX, guideY } = computeSnap(allRects, elementId, movingRect, canvasWidth);
-      setSnapGuides({ x: guideX, y: guideY });
+      const canvasRect = canvasContentRef.current?.getBoundingClientRect();
+      setSnapGuides({
+        x: guideX !== undefined && canvasRect ? guideX + canvasRect.left : undefined,
+        y: guideY !== undefined && canvasRect ? guideY + canvasRect.top : undefined,
+      });
       updateElementStyle(blockId, elementId, {
         offsetX: Math.round(snappedOffsetX),
         offsetY: Math.round(snappedOffsetY),
