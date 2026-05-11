@@ -5,6 +5,7 @@ import { useEditorStore } from "@/store/editor";
 import { useShallow } from "zustand/react/shallow";
 import type { Block, OverlayElement, ElementStyle, ShapeType } from "@/types";
 import type React from "react";
+import { resolveShadow } from "@/lib/styleUtils";
 
 interface Props {
   block: Block;
@@ -90,6 +91,7 @@ function OverlayElementView({ el, blockId, index }: { el: OverlayElement; blockI
           fontStyle: style.fontStyle ?? "normal",
           textDecoration: style.textDecoration ?? "none",
           textAlign: (style.textAlign ?? "left") as React.CSSProperties["textAlign"],
+          textShadow: resolveShadow(style.textShadow),
           zIndex: el.zIndex ?? index,
         }}
         onKeyDown={isEditing ? handleKeyDown : undefined}
@@ -129,7 +131,25 @@ function OverlayElementView({ el, blockId, index }: { el: OverlayElement; blockI
     } else if (el.shapeType === "divider") {
       shapeStyle = { ...shapeStyle, height: style.height ?? 4, width: style.width ?? 200, borderRadius: 2 };
     } else if (el.shapeType === "speech-bubble") {
-      shapeStyle = { ...shapeStyle, borderRadius: 8 };
+      const w = style.width ?? 120;
+      const h = style.height ?? 80;
+      const tailH = Math.round(h * 0.18);
+      const bodyH = h - tailH;
+      const fill = style.backgroundColor ?? "#e94560";
+      return (
+        <div
+          data-el-block={blockId}
+          data-el-id={el.id}
+          data-el-type="shape"
+          className="absolute top-0 left-0 pointer-events-auto cursor-move"
+          style={{ transform: `translate(${offsetX}px, ${offsetY}px)`, zIndex: el.zIndex ?? index }}
+        >
+          <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} style={{ display: "block" }} xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width={w} height={bodyH} rx="10" ry="10" fill={fill} />
+            <polygon points={`${w * 0.1},${bodyH} ${w * 0.28},${bodyH} ${w * 0.1},${h}`} fill={fill} />
+          </svg>
+        </div>
+      );
     } else if (clipPath) {
       shapeStyle = { ...shapeStyle, clipPath, borderRadius: 0 };
     } else {

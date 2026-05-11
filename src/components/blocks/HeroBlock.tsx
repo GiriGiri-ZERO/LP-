@@ -2,6 +2,7 @@
 
 import { useEditorStore } from "@/store/editor";
 import type { HeroContent } from "@/types";
+import { resolveBackground } from "@/lib/styleUtils";
 
 interface Props {
   blockId: string;
@@ -29,7 +30,10 @@ export function HeroBlock({ blockId, content, selected, isEditing = false }: Pro
     <section
       className="relative px-8 py-20 text-center"
       style={{
-        backgroundColor: content.background_color ?? "#1a1a2e",
+        background: content.image_url
+          ? undefined
+          : resolveBackground(content.background_color ?? "#1a1a2e", content.background_gradient),
+        backgroundColor: content.image_url ? (content.background_color ?? "#1a1a2e") : undefined,
         color: content.text_color ?? "#ffffff",
         backgroundImage: content.image_url ? `url(${content.image_url})` : undefined,
         backgroundSize: "cover",

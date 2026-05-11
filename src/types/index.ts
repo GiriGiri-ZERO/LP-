@@ -18,6 +18,24 @@ export type Tone = "professional" | "friendly" | "luxury" | "urgent";
 export type Viewport = "pc" | "sp" | "tab";
 export type EditorTab = "preview" | "html" | "css";
 
+export interface TextShadowConfig {
+  offsetX: number;
+  offsetY: number;
+  blur: number;
+  color: string;
+}
+
+export interface GradientStop {
+  color: string;
+  position: number;
+}
+
+export interface GradientConfig {
+  type: "linear";
+  angle: number;
+  stops: [GradientStop, GradientStop, ...GradientStop[]];
+}
+
 export interface ElementStyle {
   color?: string;
   backgroundColor?: string;
@@ -32,6 +50,7 @@ export interface ElementStyle {
   offsetY?: number;
   width?: number;
   height?: number;
+  textShadow?: TextShadowConfig;
 }
 
 export interface SelectedElement {
@@ -109,6 +128,7 @@ export interface HeroContent {
   cta_text: string;
   cta_url?: string;
   background_color?: string;
+  background_gradient?: GradientConfig;
   text_color?: string;
   button_color?: string;
   image_url?: string;
@@ -136,6 +156,7 @@ export interface CTAContent {
   button_url?: string;
   button_color?: string;
   background_color?: string;
+  background_gradient?: GradientConfig;
   elementStyles?: Record<string, ElementStyle>;
 }
 
@@ -220,12 +241,14 @@ export interface VideoContent {
 export interface ShapeContent {
   shape_type: ShapeType;
   fill_color: string;
+  fill_gradient?: GradientConfig;
   border_color?: string;
   border_width?: number;
   border_radius?: number;
   width?: number;
   height?: number;
   opacity?: number;
+  tail_position?: "bottom-left" | "bottom-center" | "bottom-right" | "top-left" | "top-center" | "top-right";
   elementStyles?: Record<string, ElementStyle>;
 }
 

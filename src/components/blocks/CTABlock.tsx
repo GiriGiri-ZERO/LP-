@@ -2,6 +2,7 @@
 
 import { useEditorStore } from "@/store/editor";
 import type { CTAContent } from "@/types";
+import { resolveBackground } from "@/lib/styleUtils";
 
 interface Props {
   blockId: string;
@@ -30,7 +31,7 @@ export function CTABlock({ blockId, content, selected, isEditing }: Props) {
   return (
     <section
       className="relative px-8 py-16 text-center"
-      style={{ backgroundColor: content.background_color ?? "#f9f9f9" }}
+      style={{ background: resolveBackground(content.background_color ?? "#f9f9f9", content.background_gradient) }}
     >
       {selected && (
         <div className="absolute inset-0 ring-2 ring-blue-500 ring-inset pointer-events-none" />
