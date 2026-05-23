@@ -52,6 +52,30 @@ function getSetting(key, defaultValue) {
 }
 
 /**
+ * 設定シートの値を書き戻す。既存キーがあれば値（B 列）を更新、
+ * 無ければ末尾に新規行を追加する。同一実行内キャッシュも更新する。
+ */
+function setSetting(key, value) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(CONFIG_SHEET_NAME);
+  if (!sheet) {
+    throw new Error('「' + CONFIG_SHEET_NAME + '」シートが見つかりません。初期セットアップを実行してください。');
+  }
+
+  var values = sheet.getDataRange().getValues();
+  for (var i = 1; i < values.length; i++) {
+    if (String(values[i][0] || '').trim() === key) {
+      sheet.getRange(i + 1, 2).setValue(value);
+      if (__configCache) __configCache[key] = value;
+      return;
+    }
+  }
+  // 見つからなければ末尾に追加
+  sheet.appendRow([key, value, '']);
+  if (__configCache) __configCache[key] = value;
+}
+
+/**
  * 必須設定が揃っているかチェック。
  * 揃っていなければエラーを投げる。
  */

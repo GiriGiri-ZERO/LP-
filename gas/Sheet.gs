@@ -3,16 +3,23 @@
  * 「投稿予約」シートの読み書きを担当するモジュール。
  *
  * 列定義（1 始まり）：
- *   A:1 = ID
- *   B:2 = 日付
- *   C:3 = 時
- *   D:4 = 分
- *   E:5 = 本文
- *   F:6 = ステータス  (待機中/投稿済み/失敗/スキップ)
- *   G:7 = 投稿日時
- *   H:8 = 投稿ID
- *   I:9 = 投稿URL
- *   J:10 = エラー
+ *   A:1  = ID
+ *   B:2  = 日付
+ *   C:3  = 時
+ *   D:4  = 分
+ *   E:5  = 本文   (1個目 / フック投稿)
+ *   F:6  = 本文2  (2リプ目)
+ *   G:7  = 本文3
+ *   H:8  = 本文4
+ *   I:9  = 本文5
+ *   J:10 = 本文6
+ *   K:11 = 本文7
+ *   L:12 = 本文8  (8リプ目)
+ *   M:13 = ステータス  (待機中/投稿済み/一部投稿済み/失敗/スキップ)
+ *   N:14 = 投稿日時
+ *   O:15 = 投稿ID    (連投時は複数IDをカンマ区切りで保持)
+ *   P:16 = 投稿URL   (スレッド先頭の permalink)
+ *   Q:17 = エラー
  */
 
 var POSTS_SHEET_NAME = '投稿予約';
@@ -22,17 +29,22 @@ var COL = {
   DATE: 2,
   HOUR: 3,
   MINUTE: 4,
-  BODY: 5,
-  STATUS: 6,
-  POSTED_AT: 7,
-  POST_ID: 8,
-  POST_URL: 9,
-  ERROR: 10
+  BODY: 5,          // 本文（1個目）
+  STATUS: 13,
+  POSTED_AT: 14,
+  POST_ID: 15,
+  POST_URL: 16,
+  ERROR: 17
 };
+
+// 本文列は 5〜12 の連続8列（本文 + 本文2..本文8）
+var BODY_FIRST_COL = 5;
+var BODY_COUNT = 8;
 
 var STATUS = {
   WAITING: '待機中',
   DONE: '投稿済み',
+  PARTIAL: '一部投稿済み',   // 連投の途中まで成功し、残りを次回再開する状態
   FAILED: '失敗',
   SKIPPED: 'スキップ'
 };
@@ -61,6 +73,14 @@ function loadAllPosts_() {
 
   for (var i = 0; i < values.length; i++) {
     var v = values[i];
+
+    // 本文〜本文8（列 5〜12）をまとめた配列。空欄は空文字のまま保持。
+    var bodies = [];
+    for (var c = 0; c < BODY_COUNT; c++) {
+      var cell = v[BODY_FIRST_COL - 1 + c];
+      bodies.push(cell === null || cell === undefined ? '' : cell);
+    }
+
     posts.push({
       row: i + 2,
       id: v[COL.ID - 1],
@@ -68,6 +88,7 @@ function loadAllPosts_() {
       hour: v[COL.HOUR - 1],
       minute: v[COL.MINUTE - 1],
       body: v[COL.BODY - 1],
+      bodies: bodies,
       status: v[COL.STATUS - 1],
       postedAt: v[COL.POSTED_AT - 1],
       postId: v[COL.POST_ID - 1],
@@ -150,13 +171,13 @@ function ensurePostsSheet_() {
   var sheet = ss.getSheetByName(POSTS_SHEET_NAME);
   if (!sheet) sheet = ss.insertSheet(POSTS_SHEET_NAME);
 
-  var headers = ['ID', '日付', '時', '分', '本文', 'ステータス', '投稿日時', '投稿ID', '投稿URL', 'エラー'];
+  var headers = ['ID', '日付', '時', '分', '本文', '本文2', '本文3', '本文4', '本文5', '本文6', '本文7', '本文8', 'ステータス', '投稿日時', '投稿ID', '投稿URL', 'エラー'];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
   sheet.setFrozenRows(1);
 
   // ステータス列のプルダウン (2 行目以降、上限 1000 行)
   var rule = SpreadsheetApp.newDataValidation()
-    .requireValueInList([STATUS.WAITING, STATUS.DONE, STATUS.FAILED, STATUS.SKIPPED], true)
+    .requireValueInList([STATUS.WAITING, STATUS.DONE, STATUS.PARTIAL, STATUS.FAILED, STATUS.SKIPPED], true)
     .setAllowInvalid(false)
     .build();
   sheet.getRange(2, COL.STATUS, 1000, 1).setDataValidation(rule);
@@ -164,6 +185,43 @@ function ensurePostsSheet_() {
   // 日付列の表示形式
   sheet.getRange(2, COL.DATE, 1000, 1).setNumberFormat('yyyy/MM/dd');
   sheet.getRange(2, COL.POSTED_AT, 1000, 1).setNumberFormat('yyyy/MM/dd HH:mm:ss');
+}
+
+/**
+ * 既存ユーザー向け移行（一回限り）。
+ * 旧 10 列レイアウトの「投稿予約」シートに、本文の直後へ 本文2〜本文8 の
+ * 7 列を挿入し、新 17 列レイアウトへ更新する。過去の投稿履歴は保持する。
+ *
+ * 冪等性: セル (1, 6) が既に「本文2」なら移行済みとみなし何もしない。
+ * 戻り値: 'migrated'（移行実行） / 'already'（移行済み） のいずれか。
+ */
+function migratePostsSheetToThreadV2_() {
+  var sheet = getPostsSheet_();
+
+  // 冪等性チェック: F1（6列目）が既に「本文2」なら移行済み
+  var f1 = String(sheet.getRange(1, 6).getValue() || '').trim();
+  if (f1 === '本文2') return 'already';
+
+  // 本文（5 列目）の直後に 7 列を挿入。ステータス以降は自動で右へずれる。
+  sheet.insertColumnsAfter(BODY_FIRST_COL, BODY_COUNT - 1);
+
+  // ヘッダ（1 行目）を新 17 列で上書き
+  var headers = ['ID', '日付', '時', '分', '本文', '本文2', '本文3', '本文4', '本文5', '本文6', '本文7', '本文8', 'ステータス', '投稿日時', '投稿ID', '投稿URL', 'エラー'];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
+  sheet.setFrozenRows(1);
+
+  // ステータス列（新 13 列目）のプルダウンを PARTIAL 込みで再設定
+  var rule = SpreadsheetApp.newDataValidation()
+    .requireValueInList([STATUS.WAITING, STATUS.DONE, STATUS.PARTIAL, STATUS.FAILED, STATUS.SKIPPED], true)
+    .setAllowInvalid(false)
+    .build();
+  sheet.getRange(2, COL.STATUS, 1000, 1).setDataValidation(rule);
+
+  // 日付・投稿日時列の表示形式を新しい列番号で再設定
+  sheet.getRange(2, COL.DATE, 1000, 1).setNumberFormat('yyyy/MM/dd');
+  sheet.getRange(2, COL.POSTED_AT, 1000, 1).setNumberFormat('yyyy/MM/dd HH:mm:ss');
+
+  return 'migrated';
 }
 
 function ensureConfigSheet_() {

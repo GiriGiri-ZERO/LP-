@@ -15,8 +15,8 @@ var THREADS_API_BASE = 'https://graph.threads.net/v1.0';
  * 成功時: { id: postId, permalink: url }
  * 失敗時: throw Error
  */
-function publishTextPost(userId, accessToken, text) {
-  var containerId = createTextContainer_(userId, accessToken, text);
+function publishTextPost(userId, accessToken, text, replyToId) {
+  var containerId = createTextContainer_(userId, accessToken, text, replyToId);
   // メディアコンテナ作成直後すぐに publish するとサーバー側準備が間に合わないことがある。
   // 公式ドキュメントでも数秒待つことが推奨されている。
   Utilities.sleep(2000);
@@ -33,14 +33,18 @@ function publishTextPost(userId, accessToken, text) {
 
 /**
  * Step 1: テキスト用メディアコンテナを作成し container_id を返す。
+ * replyToId を渡すと、その投稿へのリプライ（自己リプ）としてコンテナを作る。
  */
-function createTextContainer_(userId, accessToken, text) {
+function createTextContainer_(userId, accessToken, text, replyToId) {
   var url = THREADS_API_BASE + '/' + encodeURIComponent(userId) + '/threads';
   var payload = {
     media_type: 'TEXT',
     text: text,
     access_token: accessToken
   };
+  if (replyToId) {
+    payload.reply_to_id = replyToId;   // 自己リプ用（直前の投稿へぶら下げる）
+  }
   var json = httpPostWithRetry_(url, payload);
   if (!json.id) throw new Error('container_id が返されませんでした: ' + JSON.stringify(json));
   return json.id;
