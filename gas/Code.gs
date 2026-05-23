@@ -236,12 +236,29 @@ function setup() {
     ensurePostsSheet_();
     ensureLogSheet_();
     var interval = installTrigger();
-    var tokenRefresh = installTokenRefreshTrigger();
+
+    // トークン自動更新トリガーの登録。
+    // TokenRefresh.gs の関数名は環境によって異なる場合があるため、存在するものを呼ぶ。
+    // 未導入でもセットアップ全体は止めない。
+    var tokenMsg = '（TokenRefresh.gs 未導入のためスキップ）';
+    var tokenSetupFn =
+      (typeof setupTokenRefreshTrigger === 'function') ? setupTokenRefreshTrigger :
+      (typeof installTokenRefreshTrigger === 'function') ? installTokenRefreshTrigger : null;
+    if (tokenSetupFn) {
+      try {
+        tokenSetupFn();
+        tokenMsg = '登録しました';
+      } catch (e) {
+        tokenMsg = '登録に失敗: ' + String(e && e.message || e);
+        appendLog('', 'fail', 'トークン更新トリガー登録に失敗: ' + String(e && e.message || e));
+      }
+    }
+
     ui.alert(
       'セットアップ完了',
       'シートとトリガーを準備しました。\n' +
       '・投稿チェック間隔: ' + interval + ' 分\n' +
-      '・トークン自動更新: 毎週月曜 ' + tokenRefresh + ' 時台\n\n' +
+      '・トークン自動更新: ' + tokenMsg + '\n\n' +
       '次に「設定」シートで THREADS_USER_ID と THREADS_ACCESS_TOKEN を入力してください。',
       ui.ButtonSet.OK
     );
@@ -274,6 +291,8 @@ function migrateToThreadV2() {
 function uninstall() {
   var ui = SpreadsheetApp.getUi();
   var n = removeTrigger();
-  n += removeTokenRefreshTrigger();
+  if (typeof removeTokenRefreshTrigger === 'function') {
+    n += removeTokenRefreshTrigger();
+  }
   ui.alert('トリガー解除', n + ' 件のトリガーを削除しました。', ui.ButtonSet.OK);
 }
